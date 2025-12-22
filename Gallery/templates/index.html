@@ -60,6 +60,10 @@
             <i class="fas fa-sync-alt"></i> Sincronizar Nube
         </a>
 
+        <a href="{% url 'ver_perfil' %}" class="nav-item">
+            <i class="fas fa-user-circle"></i> Mi Perfil
+        </a>
+
         <div class="storage-widget">
              <div class="storage-info">
                  <span>Almacenamiento</span>
@@ -99,7 +103,6 @@
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Buscar en tu galería...">
             </div>
-            <div class="ms-3 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">A</div>
         </header>
 
         {% regroup media_files by creado_en|date:"F Y" as media_by_month %}

@@ -14,7 +14,7 @@ from requests.auth import HTTPBasicAuth
 def safe_list_files(options):
     """
     Lista archivos conectando directamente a la API de ImageKit.
-    Documentación: https://imagekit.io/docs/api-reference/media-api/list-assets
+    Documentación: https://imagekit.io/docs/api-reference
     """
     url = "https://api.imagekit.io/v1/files"
     
@@ -293,3 +293,58 @@ def eliminar_archivo(request):
         return JsonResponse({'error': 'No encontrado'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+def ver_perfil(request):
+    """
+    Vista de perfil de usuario.
+    Muestra datos del usuario, claves de API y almacenamiento detallado.
+    """
+    # 1. Calculamos almacenamiento (reutilizando lógica de index)
+    media_files = MediaFile.objects.all()
+    total_bytes = MediaFile.objects.aggregate(Sum('tamano'))['tamano__sum'] or 0
+    image_bytes = MediaFile.objects.filter(tipo__in=['imagen', 'gif']).aggregate(Sum('tamano'))['tamano__sum'] or 0
+    video_bytes = MediaFile.objects.filter(tipo='video').aggregate(Sum('tamano'))['tamano__sum'] or 0
+
+    limit_gb = 20
+    limit_bytes = limit_gb * (1024**3)
+    
+    percent_total = (total_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
+    percent_image = (image_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
+    percent_video = (video_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
+
+    def format_bytes(size):
+        power = 2**10
+        n = 0
+        power_labels = {0 : '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
+        while size > power:
+            size /= power
+            n += 1
+        return f"{size:.2f} {power_labels[n]}"
+
+    storage_data = {
+        'used_str': format_bytes(total_bytes),
+        'limit_str': f"{limit_gb} GB",
+        'percent': min(100, percent_total),
+        'percent_image': percent_image,
+        'percent_video': percent_video,
+        'image_str': format_bytes(image_bytes),
+        'video_str': format_bytes(video_bytes),
+        'file_count': media_files.count()
+    }
+
+    # 2. Preparamos contexto con API Keys (Ocultamos parte de la privada por seguridad visual)
+    private_key = getattr(settings, 'IMAGEKIT_PRIVATE_KEY', '')
+    masked_key = f"{private_key[:10]}...{private_key[-5:]}" if private_key else "No configurada"
+
+    context = {
+        'title': 'Mi Perfil',
+        'active_tab': 'perfil', # Para marcar activo en sidebar si quieres agregarlo
+        'storage': storage_data,
+        'api_conf': {
+            'public_key': getattr(settings, 'IMAGEKIT_PUBLIC_KEY', 'No configurada'),
+            'url_endpoint': getattr(settings, 'IMAGEKIT_URL_ENDPOINT', 'No configurada'),
+            'private_key_full': private_key, # Para copiar/pegar
+            'private_key_masked': masked_key
+        }
+    }
+    return render(request, 'perfil.html', context)

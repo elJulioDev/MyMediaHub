@@ -1,0 +1,205 @@
+{% load static %}
+{% load l10n %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi Perfil</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/icon.svg' %}">
+</head>
+<body>
+
+<div class="app-container">
+
+    <nav class="sidebar">
+        <div class="brand-area">
+            <i class="fas fa-camera-retro" style="background: -webkit-linear-gradient(45deg, #4285F4, #DB4437, #F4B400, #0F9D58); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;"></i>
+            <span style="font-family: 'Product Sans', sans-serif; font-weight: normal; color: #e8eaed; letter-spacing: -0.5px;">MyMediaHub</span>
+        </div>
+
+        <div class="px-3 mb-4">
+             <a href="/admin/Gallery/mediafile/add/" class="btn w-100 text-start rounded-pill py-2 shadow-sm d-flex align-items-center justify-content-center" 
+                style="background-color: #e8eaed; color: #202124; border: none; font-weight: 500;">
+                <i class="fas fa-plus me-2" style="color: #4285F4;"></i> Subir Archivo
+             </a>
+        </div>
+
+        <a href="{% url 'index' %}" class="nav-item">
+            <i class="far fa-image"></i> Principal
+        </a>
+        
+        <div style="height: 1px; background: var(--gp-border); margin: 10px 24px;"></div>
+
+        <small class="px-4 mb-2 fw-bold" style="font-size: 11px; color: var(--gp-text-secondary); letter-spacing: 0.8px;">BIBLIOTECA</small>
+        
+        <a href="#" class="nav-item">
+            <i class="far fa-star"></i> Favoritos
+        </a>
+        <a href="{% url 'lista_albumes' %}" class="nav-item">
+            <i class="far fa-folder"></i> Álbumes
+        </a>
+        <a href="#" class="nav-item">
+            <i class="far fa-trash-alt"></i> Papelera
+        </a>
+        
+        <div style="height: 1px; background: var(--gp-border); margin: 10px 24px;"></div>
+
+        <small class="px-4 mb-2 fw-bold" style="font-size: 11px; color: var(--gp-text-secondary); letter-spacing: 0.8px;">UTILIDADES</small>
+        
+        <a href="{% url 'sincronizar' %}" class="nav-item">
+            <i class="fas fa-sync-alt"></i> Sincronizar Nube
+        </a>
+
+        <a href="#" class="nav-item active">
+            <i class="fas fa-user-circle"></i> Mi Perfil
+        </a>
+
+        <div class="storage-widget">
+             <div class="storage-info">
+                 <span>Almacenamiento</span>
+                 <span class="storage-numbers">{{ storage.used_str }} de {{ storage.limit_str }}</span>
+             </div>
+             
+            <div class="storage-bar-bg" style="display: flex; background-color: #3c4043; border-radius: 10px; overflow: hidden; height: 6px;">
+                <div style="width: {{ storage.percent_image|unlocalize }}%; background-color: #EA4335; height: 100%; transition: width 1s;" title="Imágenes"></div>
+                <div style="width: {{ storage.percent_video|unlocalize }}%; background-color: #8ab4f8; height: 100%; transition: width 1s;" title="Videos"></div>
+             </div>
+
+             <div class="d-flex justify-content-between mt-2" style="font-size: 11px; color: #9aa0a6;">
+                <span>{{ storage.file_count }} archivos</span>
+                <span>{{ storage.percent|floatformat:1 }}% ocupado</span>
+             </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="profile-wrapper">
+            <div class="profile-header-compact mb-4">
+                <h2 class="text-white fw-normal" style="font-family: 'Product Sans', sans-serif;">Cuenta</h2>
+                <p class="text-secondary small">Gestiona tu información, privacidad y seguridad.</p>
+            </div>
+
+            <div class="gp-card p-0 mb-4 overflow-hidden">
+                <div class="d-flex align-items-center p-4">
+                    <div class="avatar-compact me-4">
+                        {{ request.user.username|first|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1 text-white" style="font-size: 1.25rem;">{{ request.user.first_name }} {{ request.user.last_name }}</h4>
+                        <p class="text-secondary mb-0 small">{{ request.user.email }}</p>
+                        <span class="badge bg-dark border border-secondary text-secondary mt-2 rounded-pill fw-normal" style="font-size: 0.75rem;">Administrador</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="gp-card p-3 h-100 d-flex align-items-center">
+                        <div class="icon-sq bg-soft-blue text-blue me-3">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <div>
+                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.7rem;">Uso de Nube</div>
+                            <div class="text-white fw-bold">{{ storage.percent|floatformat:1 }}%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="gp-card p-3 h-100 d-flex align-items-center">
+                        <div class="icon-sq bg-soft-red text-red me-3">
+                            <i class="fas fa-photo-video"></i>
+                        </div>
+                        <div>
+                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.7rem;">Archivos</div>
+                            <div class="text-white fw-bold">{{ storage.file_count }} items</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gp-card">
+                <div class="card-header-gp py-3 px-4">
+                    <h6 class="mb-0 text-white" style="font-size: 0.95rem;">Credenciales de Desarrollo</h6>
+                </div>
+                <div class="card-body-gp p-4">
+                    
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-3">
+                            <label class="text-secondary small">Endpoint URL</label>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control bg-dark border-secondary text-white font-monospace" value="{{ api_conf.url_endpoint }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-3">
+                            <label class="text-secondary small">Public Key</label>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control bg-dark border-secondary text-white font-monospace" value="{{ api_conf.public_key }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="text-secondary small">Private Key</label>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="input-group input-group-sm">
+                                <input type="password" id="privateKeyInput" class="form-control bg-dark border-secondary text-white font-monospace" value="{{ api_conf.private_key_full }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleKey(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyKey()">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleKey(btn) {
+        const input = document.getElementById('privateKeyInput');
+        const icon = btn.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function copyKey() {
+        const input = document.getElementById('privateKeyInput');
+        navigator.clipboard.writeText(input.value);
+        // Feedback visual sutil en lugar de alert
+        const btn = event.currentTarget;
+        const originalIcon = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => btn.innerHTML = originalIcon, 2000);
+    }
+</script>
+</body>
+</html>

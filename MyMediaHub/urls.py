@@ -14,5 +14,6 @@ urlpatterns = [
     path('sincronizar/', views.sincronizar_galeria, name='sincronizar'),
     path('eliminar/', views.eliminar_archivo, name='eliminar_archivo'),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw'),
-
+    path('perfil/', views.ver_perfil, name='ver_perfil'),
+    
 ]

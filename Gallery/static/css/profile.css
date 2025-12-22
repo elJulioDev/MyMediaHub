@@ -1,0 +1,132 @@
+/* --- BLOQUEO DE SCROLL (Solo para Perfil) --- */
+body {
+    overflow: hidden; /* Elimina la barra de desplazamiento de la ventana */
+    height: 100vh;    /* Fuerza la altura exacta de la pantalla */
+}
+
+.main-content {
+    height: 100vh;    /* El contenedor principal ocupa toda la altura */
+    overflow: hidden; /* Asegura que no haya scroll interno */
+    
+    /* Centrado Vertical: Esto hará que tu perfil quede perfectamente en el medio */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+}
+
+/* --- AJUSTE DE WRAPPER --- */
+.profile-wrapper {
+    /* Mantenemos el ancho que definimos antes */
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    
+    /* Quitamos padding vertical excesivo para evitar desbordes */
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.profile-wrapper {
+    max-width: 720px; /* Ancho máximo estilo Google Account */
+    margin: 0 auto;   /* Centrado */
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+
+/* --- TARJETAS GOOGLE STYLE (Redefinidas para ser más sutiles) --- */
+.gp-card {
+    background-color: var(--gp-sidebar-bg, #1E1F20);
+    border: 1px solid var(--gp-border, #3c4043);
+    border-radius: 8px;
+    /* Sin sombras pesadas por defecto, solo al hover suave */
+    transition: border-color 0.2s;
+}
+
+.gp-card:hover {
+    border-color: #5f6368;
+}
+
+.card-header-gp {
+    border-bottom: 1px solid var(--gp-border, #3c4043);
+    background-color: transparent;
+}
+
+/* --- AVATAR COMPACTO --- */
+.avatar-compact {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #4285F4, #34A853);
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 500;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- ICONOS CUADRADOS (Estadísticas) --- */
+.icon-sq {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.bg-soft-blue { background-color: rgba(66, 133, 244, 0.15); }
+.text-blue { color: #8ab4f8; }
+
+.bg-soft-red { background-color: rgba(234, 67, 53, 0.15); }
+.text-red { color: #ea4335; }
+
+/* --- FORMULARIOS DARK --- */
+.form-control.bg-dark {
+    background-color: #131314 !important; /* Fondo del body para contraste */
+    border-color: var(--gp-border, #3c4043);
+    color: #e8eaed !important;
+    font-size: 0.85rem; /* Texto técnico un poco más pequeño */
+}
+
+.form-control.bg-dark:focus {
+    border-color: var(--gp-blue, #8ab4f8);
+    box-shadow: none; /* Google style es flat */
+}
+
+.input-group-text.bg-dark {
+    background-color: #1E1F20 !important;
+    border-color: var(--gp-border, #3c4043);
+}
+
+.btn-outline-secondary {
+    border-color: var(--gp-border, #3c4043);
+    color: var(--gp-text-secondary);
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #5f6368;
+    color: #e8eaed;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .profile-wrapper {
+        padding-top: 20px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .d-flex.align-items-center.p-4 {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .avatar-compact {
+        margin-right: 0 !important;
+        margin-bottom: 15px;
+    }
+}
