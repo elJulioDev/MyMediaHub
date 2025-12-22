@@ -8,30 +8,40 @@ const modalProgressBar = document.getElementById('modalProgressBar');
 const modalProgressText = document.getElementById('modalProgressText');
 
 let currentIndex = -1; 
-let currentXhr = null; // Referencia para cancelar descargas
+let currentXhr = null; 
 
-// 1. URL OPTIMIZADA
+// --- OPTIMIZACIÓN 1: URLs INTELIGENTES ---
 function getOptimizedUrl(fullUrl, isVideo = false) {
+    const separator = fullUrl.includes('?') ? '&' : '?';
+
     if (isVideo) {
-        const separator = fullUrl.includes('?') ? '&' : '?';
+        // Mantenemos orig-true para videos para evitar gastar VPUs en transcoding
         return `${fullUrl}${separator}tr=orig-true`;
     }
+    
+    // Para IMÁGENES:
     const width = window.innerWidth;
+    // Redondeamos a múltiplos de 200px para aumentar el "Cache Hit Ratio"
+    // (Si la pantalla es 1366 o 1400, ambos usarán la versión de 1400px cacheada)
     const roundedWidth = Math.ceil(width / 200) * 200; 
-    const transformations = `tr=w-${roundedWidth}`; 
-    const separator = fullUrl.includes('?') ? '&' : '?';
+    
+    // AGREGAMOS: f-auto (WebP/AVIF) y q-auto (Calidad inteligente)
+    // Esto reduce el peso un 30-50% extra comparado con solo redimensionar
+    const transformations = `tr=w-${roundedWidth},f-auto,q-auto`; 
+    
     return `${fullUrl}${separator}${transformations}`;
 }
 
-// 2. PRECARGA (Solo imágenes siguientes)
+// 2. PRECARGA (Reducida a 1 para ahorrar ancho de banda si el usuario cierra rápido)
 function preloadNextFiles(startIndex) {
-    const prefetchCount = 2; 
+    const prefetchCount = 1; // Bajamos de 2 a 1 para ser más conservadores
     for (let i = 1; i <= prefetchCount; i++) {
         const nextIndex = startIndex + i;
         if (nextIndex >= mediaItems.length) break;
 
         const item = mediaItems[nextIndex];
         const rawUrl = item.getAttribute('data-full-url');
+        // Solo precargamos si es imagen
         if (item.querySelector('.fa-play-circle') === null) { 
             const img = new Image();
             img.src = getOptimizedUrl(rawUrl, false);
@@ -39,10 +49,10 @@ function preloadNextFiles(startIndex) {
     }
 }
 
-// 3. CARGA CON XHR (BARRA DE PROGRESO)
+// 3. CARGA CON XHR (Sin cambios, funciona bien)
 function loadImageWithXHR(url) {
     return new Promise((resolve, reject) => {
-        if (currentXhr) { currentXhr.abort(); } // Cancelar anterior
+        if (currentXhr) { currentXhr.abort(); } 
 
         const xhr = new XMLHttpRequest();
         currentXhr = xhr;
@@ -52,12 +62,9 @@ function loadImageWithXHR(url) {
 
         xhr.onprogress = (event) => {
             if (event.lengthComputable) {
-                // Si el servidor nos dice el tamaño total
                 const percentComplete = (event.loaded / event.total) * 100;
                 updateProgressBar(percentComplete, `Cargando... ${Math.round(percentComplete)}%`);
             } else {
-                // Si el servidor NO dice el tamaño (Chunked encoding)
-                // Ponemos la barra al 100% visualmente pero con texto de espera
                 updateProgressBar(100, "Procesando imagen...");
             }
         };
@@ -73,7 +80,6 @@ function loadImageWithXHR(url) {
         };
 
         xhr.onerror = () => {
-            // Esto suele saltar por CORS (Cross-Origin Resource Sharing)
             reject(new Error('Error de Red / CORS'));
             currentXhr = null;
         };
@@ -87,16 +93,15 @@ function updateProgressBar(percent, text) {
     modalProgressBar.style.width = percent + '%';
     if (text) modalProgressText.innerText = text;
     
-    // Si llega a 100, ocultar tras un breve delay (pero no si es "Procesando...")
     if (percent >= 100 && text === "Completado") {
         setTimeout(() => {
             modalLoader.classList.add('d-none');
-            modalProgressBar.style.width = '0%'; // Reset visual
+            modalProgressBar.style.width = '0%'; 
         }, 300);
     }
 }
 
-// 4. ABRIR MODAL
+// 4. ABRIR MODAL (Optimizado)
 async function openModal(index) {
     if (index < 0 || index >= mediaItems.length) return;
     preloadNextFiles(index);
@@ -108,7 +113,6 @@ async function openModal(index) {
     
     modalContent.innerHTML = ''; 
     
-    // Limpiar estado de carga
     if (currentXhr) { currentXhr.abort(); }
     modalLoader.classList.add('d-none');
 
@@ -119,7 +123,6 @@ async function openModal(index) {
     const finalUrl = getOptimizedUrl(rawUrl, isVideo);
 
     if (isVideo) {
-        // VIDEO: Carga nativa (streaming)
         const video = document.createElement('video');
         video.src = finalUrl;
         video.controls = true;
@@ -128,39 +131,33 @@ async function openModal(index) {
         video.style.maxHeight = '90vh';
         modalContent.appendChild(video);
     } else {
-        // IMAGEN: Intentamos carga con barra, si falla, carga normal
         try {
-            // Placeholder borroso (Miniatura inmediata)
-            const thumbUrl = item.querySelector('img').src;
-            const imgPlaceholder = document.createElement('img');
-            imgPlaceholder.src = thumbUrl;
-            Object.assign(imgPlaceholder.style, {
-                maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain',
-                filter: 'blur(10px)', position: 'absolute', zIndex: '1', opacity: '0.6'
-            });
-            modalContent.appendChild(imgPlaceholder);
+            // Placeholder: Usamos la miniatura que YA está en el DOM (caché instantánea)
+            const thumbImg = item.querySelector('img');
+            if (thumbImg) {
+                const imgPlaceholder = document.createElement('img');
+                imgPlaceholder.src = thumbImg.src; // URL ya cacheada
+                Object.assign(imgPlaceholder.style, {
+                    maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain',
+                    filter: 'blur(10px)', position: 'absolute', zIndex: '1', opacity: '0.6'
+                });
+                modalContent.appendChild(imgPlaceholder);
+            }
             
-            // 2. Mostrar explícitamente la barra al 0% antes de empezar
             updateProgressBar(0, "Iniciando descarga...");
-
-            // Intentamos descargar el Blob (puede fallar por CORS)
             const blobUrl = await loadImageWithXHR(finalUrl);
-
-            // ÉXITO: Creamos imagen desde el Blob local
-            createFinalImage(blobUrl, imgPlaceholder, true);
+            // Pasamos el placeholder para que createFinalImage lo borre al terminar
+            const placeholderRef = modalContent.querySelector('img[style*="blur"]');
+            createFinalImage(blobUrl, placeholderRef, true);
 
         } catch (e) {
-            console.warn("Fallo carga con barra (posible CORS), usando carga estándar.", e);
-            // FALLBACK: Carga estándar sin XHR
-            // Ocultamos barra de error
+            console.warn("Fallback carga estándar.", e);
             modalLoader.classList.add('d-none');
-            // Cargamos la imagen directamente de la URL
             createFinalImage(finalUrl, modalContent.querySelector('img'), false);
         }
     }
 }
 
-// Helper para insertar la imagen final
 function createFinalImage(source, placeholder, isBlob) {
     const img = document.createElement('img');
     img.src = source;
@@ -171,9 +168,7 @@ function createFinalImage(source, placeholder, isBlob) {
     
     img.onload = () => {
         img.style.opacity = '1';
-        // Eliminar placeholder
-        if (placeholder) setTimeout(() => placeholder.remove(), 300);
-        // Si era un blob, liberar memoria
+        if (placeholder) placeholder.remove();
         if (isBlob) window.URL.revokeObjectURL(source);
     };
     
@@ -186,8 +181,6 @@ function closeModal() {
     modalContent.innerHTML = '';
     modalLoader.classList.add('d-none'); 
     document.body.style.overflow = 'auto';
-    const video = modalContent.querySelector('video');
-    if (video) video.pause();
 }
 
 // --- EVENTOS ---
@@ -220,7 +213,7 @@ function deleteCurrentFile() {
     const fileId = currentItem.getAttribute('data-id'); 
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    fetch("{% url 'eliminar_archivo' %}", {
+    fetch(URLS.eliminar, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
         body: `archivo_id=${fileId}`
@@ -235,29 +228,11 @@ function deleteCurrentFile() {
     });
 }
 
-// --- SERVICE WORKER Y CULLING ---
+// --- SERVICE WORKER Y CULLING OPTIMIZADO ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(console.error));
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    const observerOptions = { root: null, rootMargin: '600px 0px', threshold: 0.01 };
-    const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const img = entry.target;
-            if (entry.isIntersecting) {
-                if (img.dataset.src) img.src = img.dataset.src;
-            } else {
-                if (img.src && img.src !== window.location.href) {
-                    img.dataset.src = img.src;
-                    img.removeAttribute('src');
-                }
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('.photo-item img').forEach(img => {
-        if(img.src) img.dataset.src = img.src; 
-        imageObserver.observe(img);
-    });
-});
+// NOTA: Hemos ELIMINADO el IntersectionObserver que borraba el src.
+// Dejamos que el navegador use loading="lazy" nativo (ya presente en tu HTML).
+// Esto es mucho más eficiente y evita parpadeos o re-descargas innecesarias.

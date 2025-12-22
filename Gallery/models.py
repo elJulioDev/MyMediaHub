@@ -98,24 +98,19 @@ class MediaFile(models.Model):
             return ""
         
         url_original = self.archivo.url
-        # Limpiamos query params previos
         url_base = url_original.split("?")[0]
 
-        # Parámetros de transformación:
-        # w-300: Ancho 300px (suficiente para el grid)
-        # f-auto: Formato automático (WebP/AVIF si el navegador lo soporta)
-        # q-80: Calidad 80% (imperceptible en miniaturas, ahorra 30% peso)
-        # fo-auto: Enfoque inteligente
+        # Parámetros globales de ahorro: 
+        # Ancho fijo, formato automático (WebP), calidad inteligente
         params = "?tr=w-300,f-auto,q-80,fo-auto"
+        paramsVid = "?tr=w-300,f-auto,q-80"
 
         if self.is_video():
-            # Para videos, añade ik-thumbnail.jpg Y los parámetros
-            return f"{url_base}/ik-thumbnail.jpg"
+            # CORRECCIÓN: Añadimos params también al thumbnail de video
+            return f"{url_base}/ik-thumbnail.jpg{paramsVid}"
             
         elif self.is_gif():
-            # GIFs: Usamos ik-thumbnail.jpg para traer solo el primer frame (estático)
             return f"{url_original}/ik-thumbnail.jpg{params}"
             
         else:
-            # Imágenes normales
             return f"{url_base}{params}"

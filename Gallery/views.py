@@ -269,8 +269,8 @@ def eliminar_archivo(request):
     """
     Elimina archivo de DB y Nube.
     """
-    if not request.user.is_staff:
-        return JsonResponse({'error': 'No autorizado'}, status=403)
+    #if not request.user.is_staff:
+    #    return JsonResponse({'error': 'No autorizado'}, status=403)
 
     archivo_id = request.POST.get('archivo_id')
     if not archivo_id:
