@@ -1,0 +1,103 @@
+/* Nuevo style.css */
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f0f2f5; /* Un gris claro más suave */
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+/* NAVBAR */
+.navbar-dark.bg-dark {
+  background-color: #1a202c !important; /* Un gris oscuro casi negro */
+}
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.navbar-nav .nav-link {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+.navbar-nav .nav-link:hover {
+  color: #fff;
+}
+.navbar-nav .nav-link .bi {
+  margin-right: 8px;
+}
+
+/* Encabezados y títulos */
+h1, h2, h5 {
+  font-weight: 700;
+  color: #2d3748;
+}
+h1.mb-5 {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+/* Tarjetas (Cards) */
+.card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra más pronunciada pero suave */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px); /* Efecto de elevación al pasar el mouse */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-img-top {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* Contenido multimedia en la galería */
+.media-container .card {
+    cursor: pointer;
+}
+.media-container img, .media-container video {
+    transition: transform 0.3s ease;
+}
+.media-container .card:hover img, .media-container .card:hover video {
+    transform: scale(1.05); /* Zoom sutil en la imagen/video */
+}
+
+/* Placeholder para miniaturas */
+.placeholder-icon {
+  background-color: #e2e8f0;
+  color: #718096;
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+/* Modal */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.95);
+}
+.modal-content-box img, .modal-content-box video {
+  max-width: 90vw;
+  max-height: 90vh;
+}
+.close-button {
+  top: 20px;
+  right: 20px;
+  font-size: 2.5rem;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.close-button:hover {
+  color: #f56565;
+}

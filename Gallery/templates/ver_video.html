@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ archivo.nombre }} - Galería Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'video.css' %}">
+</head>
+<body>
+
+  <div class="background-decoration"></div>
+
+  <div class="video-container">
+    <div class="video-wrapper fade-in-up">
+      <video controls autoplay loop>
+        <source src="{{ archivo.url }}" type="video/mp4">
+        Tu navegador no puede reproducir este video.
+      </video>
+    </div>
+
+    <div class="video-info fade-in-up">
+      <h1 class="video-title">
+        <i class="fas fa-video"></i>
+        {{ archivo.nombre }}
+      </h1>
+      
+      <div class="video-controls">
+        {% if archivo.album %}
+          <a href="{% url 'detalle_album' archivo.album.id %}" class="control-btn primary">
+            <i class="fas fa-arrow-left"></i> Volver al álbum
+          </a>
+        {% endif %}
+        
+        <a href="{% url 'index' %}" class="control-btn">
+          <i class="fas fa-home"></i> Inicio
+        </a>
+        
+        <a href="{% url 'lista_albumes' %}" class="control-btn">
+          <i class="fas fa-images"></i> Álbumes
+        </a>
+        
+        <a href="{{ archivo.url }}" target="_blank" rel="noopener noreferrer" class="control-btn">
+          <i class="fas fa-external-link-alt"></i> Abrir original
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Agregar animaciones
+      const elements = document.querySelectorAll('.fade-in-up');
+      elements.forEach((el, index) => {
+        el.style.animationDelay = `${index * 0.2}s`;
+      });
+
+      // Control de video personalizado
+      const video = document.querySelector('video');
+      if (video) {
+        video.addEventListener('loadedmetadata', function() {
+          console.log('Video cargado:', video.duration, 'segundos');
+        });
+
+        // Agregar controles de teclado
+        document.addEventListener('keydown', function(e) {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            if (video.paused) {
+              video.play();
+            } else {
+              video.pause();
+            }
+          }
+          if (e.code === 'Escape') {
+            {% if archivo.album %}
+              window.location.href = "{% url 'detalle_album' archivo.album.id %}";
+            {% else %}
+              window.location.href = "{% url 'index' %}";
+            {% endif %}
+          }
+        });
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

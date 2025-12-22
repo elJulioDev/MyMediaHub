@@ -1,0 +1,23 @@
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales (si usas venv o env)
+venv/
+env/
+.env
+
+# Archivos estáticos y media subidos por usuarios
+media/
+staticfiles/
+
+# Logs y sistemas Base de datos (SQLite no se sube, MySQL tampoco)
+db.sqlite3
+*.log
+local_settings.py
+
+# Ignorar archivos de migración, pero mantener el módulo (__init__.py)
+**/migrations/*.py
+!**/migrations/__init__.py

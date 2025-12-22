@@ -1,0 +1,332 @@
+/* VARIABLES DE DISEÑO GOOGLE PHOTOS (DARK MODE) */
+:root {
+    /* Fondo principal (Gris muy oscuro, no negro puro) */
+    --gp-bg: #131314; 
+    
+    /* Sidebar diferenciado (Un poco más claro para separar visualmente) */
+    --gp-sidebar-bg: #1E1F20; 
+    
+    /* Textos (Blanco suave y Gris medio) */
+    --gp-text-main: #e8eaed;
+    --gp-text-secondary: #babdbf;
+    
+    /* Acentuación (Azul Google más suave para fondo oscuro) */
+    --gp-blue: #8ab4f8; 
+    --gp-blue-bg: rgba(138, 180, 248, 0.16); /* Fondo azul transparente para items activos */
+    
+    /* Elementos de interfaz */
+    --gp-hover-bg: rgba(255, 255, 255, 0.04);
+    --gp-search-bg: #303134;
+    --gp-border: #3c4043;
+    
+    /* Dimensiones */
+    --gp-sidebar-width: 256px;
+}
+
+body {
+    background-color: var(--gp-bg);
+    font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+    color: var(--gp-text-main);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* --- LAYOUT GENERAL --- */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- SIDEBAR IZQUIERDO (MEJORADO) --- */
+.sidebar {
+    width: var(--gp-sidebar-width);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    padding: 12px 0; /* Padding ajustado */
+    background: var(--gp-sidebar-bg); /* Color distintivo */
+    border-right: 1px solid var(--gp-border); /* Borde sutil */
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-area {
+    padding: 12px 24px 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    color: var(--gp-text-main);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 48px;
+    margin-right: 10px; /* Espacio para la curva */
+    border-radius: 0 24px 24px 0;
+    color: var(--gp-text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 2px;
+    transition: background 0.1s, color 0.1s;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background-color: var(--gp-hover-bg);
+    color: var(--gp-text-main);
+}
+
+/* Estado Activo (Azul brillante sobre fondo oscuro) */
+.nav-item.active {
+    background-color: var(--gp-blue-bg);
+    color: var(--gp-blue);
+}
+
+.nav-item.active i {
+    color: var(--gp-blue);
+}
+
+.nav-item i {
+    margin-right: 18px;
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+    color: var(--gp-text-secondary); /* Iconos grises por defecto */
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+    flex: 1;
+    margin-left: var(--gp-sidebar-width);
+    padding: 0 24px 24px 24px;
+}
+
+/* --- TOP BAR (BUSCADOR OSCURO) --- */
+.top-bar {
+    position: sticky;
+    top: 0;
+    background: #131314;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    z-index: 900;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.search-box {
+    background: var(--gp-search-bg);
+    border-radius: 8px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    align-items: center;
+    color: var(--gp-text-secondary);
+    transition: background 0.2s;
+    border: 1px solid transparent;
+}
+
+.search-box:focus-within {
+    background: var(--gp-search-bg); /* Se mantiene oscuro */
+    border-color: rgba(255,255,255,0.1);
+    color: var(--gp-text-main);
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    flex: 1;
+    margin-left: 15px;
+    font-size: 16px;
+    color: var(--gp-text-main); /* Texto blanco al escribir */
+    outline: none;
+}
+
+.search-box input::placeholder {
+    color: var(--gp-text-secondary);
+}
+
+/* --- TIMELINE DE FOTOS --- */
+.timeline-group {
+    margin-bottom: 40px;
+}
+
+.date-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gp-text-main); /* Fecha en blanco */
+    margin-bottom: 15px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+/* LA REJILLA */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1 / 1; 
+    background-color: #303134; /* Placeholder gris oscuro mientras carga */
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 2px; 
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.2s;
+}
+
+.photo-item:hover {
+    filter: brightness(1.1); /* Brillar un poco al hacer hover */
+}
+
+/* --- ESTADO VACÍO --- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    color: var(--gp-text-secondary);
+}
+
+/* Scrollbar oscuro */
+::-webkit-scrollbar {
+    width: 12px;
+}
+::-webkit-scrollbar-track {
+    background: var(--gp-bg);
+}
+::-webkit-scrollbar-thumb {
+    background-color: #5f6368;
+    border-radius: 6px;
+    border: 3px solid var(--gp-bg);
+}
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; padding: 0 10px; }
+    .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 2px; }
+}
+
+/* --- WIDGET DE ALMACENAMIENTO --- */
+.storage-widget {
+    margin-top: auto; /* Empuja al fondo del sidebar */
+    padding: 20px 24px;
+    border-top: 1px solid var(--gp-border);
+}
+
+.storage-info {
+    font-size: 12px;
+    color: var(--gp-text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.storage-numbers {
+    color: var(--gp-text-main);
+    font-weight: 500;
+}
+
+/* Barra de fondo */
+.storage-bar-bg {
+    width: 100%;
+    height: 6px;
+    background-color: #3c4043; /* Gris oscuro del tema */
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Barra de progreso con gradiente Google */
+.storage-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335);
+    border-radius: 10px;
+    width: 0%; /* Se anima con JS o CSS inline */
+    transition: width 1s ease-in-out;
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.4); /* Glow suave */
+}
+
+/* Botón de comprar espacio (Estilo Google One) */
+.btn-storage {
+    margin-top: 12px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--gp-border);
+    color: var(--gp-blue);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 0;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-storage:hover {
+    background: rgba(138, 180, 248, 0.08);
+    border-color: var(--gp-blue);
+}
+
+/* Optimización tipo Videojuego: Culling de renderizado */
+.timeline-group {
+    content-visibility: auto; 
+    contain-intrinsic-size: 1000px; /* Altura estimada de cada grupo para evitar saltos en el scroll */
+}
+
+/* Barra de carga en el Modal */
+.modal-loader-container {
+    position: absolute;
+    bottom: 40px; /* Ajusta según prefieras */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%; /* Ancho de la barra */
+    max-width: 400px;
+    z-index: 2005;
+    text-align: center;
+    pointer-events: none; /* Para que no bloquee clicks */
+}
+
+.modal-progress-bg {
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.modal-progress-bar {
+    height: 100%;
+    background-color: #4285F4; /* Azul Google */
+    width: 0%;
+    transition: width 0.2s linear;
+    box-shadow: 0 0 10px rgba(66, 133, 244, 0.5);
+}
+
+.modal-progress-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-family: 'Product Sans', sans-serif;
+    letter-spacing: 0.5px;
+}

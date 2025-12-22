@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ album.nombre }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'index' %}"><i class="bi bi-house-door-fill"></i> Inicio</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'lista_albumes' %}"><i class="bi bi-images"></i> Álbumes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+<!-- DETALLE DEL ÁLBUM -->
+<div class="container py-5 mt-5">
+  <h2 class="text-center mb-3"><i class="bi bi-collection"></i> {{ album.nombre }}</h2>
+  <p class="text-center text-muted">{{ album.descripcion }}</p>
+  <p class="text-center small text-secondary">
+    {{ album.cantidad_archivos }} archivo{{ album.cantidad_archivos|pluralize }} | 
+    {{ album.cantidad_subalbumes }} subálbum{{ album.cantidad_subalbumes|pluralize }} |
+    Creado el {{ album.creado_en|date:"d/m/Y" }}
+  </p>
+
+  {% if subalbumes %}
+    <h5 class="mt-5 mb-3"><i class="bi bi-folder2-open"></i> Subálbumes</h5>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      {% for sub in subalbumes %}
+        <div class="col">
+          <div class="card shadow-sm border-0 h-100">
+            {% if sub.preview_url %}
+              <img src="{{ sub.preview_url }}" class="card-img-top object-fit-cover" style="aspect-ratio: 4/3;" alt="{{ sub.nombre }}">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="aspect-ratio: 4/3;">
+                <i class="bi bi-folder-fill fs-1"></i>
+              </div>
+            {% endif %}
+            <div class="card-body text-center">
+              <h6 class="card-title text-truncate mb-0">{{ sub.nombre }}</h6>
+              <p class="small text-muted mb-0">{{ sub.cantidad_archivos }} archivo{{ sub.cantidad_archivos|pluralize }}</p>
+              <a href="{% url 'detalle_album' sub.id %}" class="stretched-link"></a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if archivos %}
+    <h5 class="mt-5 mb-3"><i class="bi bi-file-earmark-image"></i> Archivos</h5>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      {% for archivo in archivos %}
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+{% if archivo.is_video or archivo.is_image or archivo.is_gif %}
+  <a href="{% url 'ver_archivo' album.id archivo.id %}">
+{% else %}
+  <a href="{{ archivo.url }}" target="_blank" rel="noopener noreferrer">
+{% endif %}
+
+
+              {% if archivo.is_image or archivo.is_gif %}
+                <img src="{{ archivo.url }}" class="card-img-top object-fit-cover" style="aspect-ratio: 4/3;" alt="{{ archivo.nombre }}">
+              {% elif archivo.is_video %}
+                <video class="card-img-top object-fit-cover" style="aspect-ratio: 4/3;" preload="metadata">
+                  <source src="{{ archivo.url }}" type="video/mp4">
+                  Tu navegador no soporta el video.
+                </video>
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="aspect-ratio: 4/3;">
+                  <i class="bi bi-question-circle fs-1"></i>
+                </div>
+              {% endif %}
+            </a>
+            <div class="card-body text-center">
+              <h6 class="card-title text-truncate">{{ archivo.nombre }}</h6>
+              <p class="card-text small text-muted">{{ archivo.creado_en|date:"d/m/Y H:i" }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted text-center mt-5">Este álbum no tiene archivos aún.</p>
+  {% endif %}
+</div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
