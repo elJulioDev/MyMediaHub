@@ -5,6 +5,7 @@ Django settings for MyMediaHub project.
 from pathlib import Path
 import os
 import pymysql
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,11 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Configuración de MySQL Driver
 pymysql.install_as_MySQLdb()
 
+# Cargar variables de entorno desde un archivo .env si es necesario
+load_dotenv()
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9!y97@e_*o+jn!(4-r$5*#bvwcjw*vtwi0*t#li3_xb28f)dkz'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -69,9 +73,9 @@ WSGI_APPLICATION = 'MyMediaHub.wsgi.application'
 
 # --- CONFIGURACIÓN DE IMAGEKIT ---
 # Ve a tu panel de ImageKit -> Developer Options para obtener estos datos
-IMAGEKIT_PRIVATE_KEY = 'private_03GFZLg+cKgkzDyfDwfCKRi2E40='
-IMAGEKIT_PUBLIC_KEY = 'public_PWRxb70U3KqLe3LilTtxqYnArlQ='
-IMAGEKIT_URL_ENDPOINT = 'https://ik.imagekit.io/photop'
+IMAGEKIT_PRIVATE_KEY = os.getenv('IMAGEKIT_PRIVATE_KEY')
+IMAGEKIT_PUBLIC_KEY = os.getenv('IMAGEKIT_PUBLIC_KEY')
+IMAGEKIT_URL_ENDPOINT = os.getenv('IMAGEKIT_URL_ENDPOINT')
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
