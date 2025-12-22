@@ -1,4 +1,3 @@
-// GaleriaCatbox/Galeria/templates/sw.js
 const CACHE_NAME = 'catbox-galeria-cache-v1';
 
 // Lista de dominios que queremos cachear (ImageKit)
