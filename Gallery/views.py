@@ -234,16 +234,27 @@ def sincronizar_galeria(request):
                 mf.save()
                 created_count += 1
 
-        # --- PASO 3: LIMPIEZA INVERSA (Si no está en Cloud -> Borrar Local) ---
-        # Obtenemos todos los archivos locales que tienen un ID de nube (están vinculados)
+        # --- PASO 3: LIMPIEZA INVERSA OPTIMIZADA ---
+        # Obtenemos los archivos locales que tienen ID pero NO están en la lista descargada
         local_files_linked = MediaFile.objects.exclude(file_id__isnull=True).exclude(file_id='')
+        
+        # 1. Recolectamos solo los IDs de base de datos a eliminar
+        ids_a_eliminar = [
+            lfile.id for lfile in local_files_linked 
+            if lfile.file_id not in cloud_ids
+        ]
+        
+        deleted_local_count = len(ids_a_eliminar)
 
-        for local_file in local_files_linked:
-            # Si el ID local NO está en el set de IDs que acabamos de bajar de la nube...
-            if local_file.file_id not in cloud_ids:
-                # ...significa que se borró en ImageKit. Lo borramos localmente.
-                local_file.delete()
-                deleted_local_count += 1
+        if deleted_local_count > 0:
+            # TRUCO DE OPTIMIZACIÓN:
+            # Primero, desvinculamos el archivo de la BD para "engañar" a cualquier señal de limpieza.
+            # Esto evita que Django intente conectar con ImageKit para borrar el archivo.
+            archivos_a_borrar = MediaFile.objects.filter(id__in=ids_a_eliminar)
+            archivos_a_borrar.update(archivo=None, file_id=None)
+            
+            # Ahora sí, borramos masivamente los registros (1 sola consulta SQL, 0 Requests a API)
+            archivos_a_borrar.delete()
         
         # Mensajes de feedback
         parts = []

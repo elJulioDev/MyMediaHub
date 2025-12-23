@@ -152,8 +152,25 @@
     
     <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; z-index: 2002;">
         <button id="closeModal" class="btn btn-link text-white fs-4"><i class="fas fa-arrow-left"></i></button>
-        <div class="d-flex gap-3">
-            <button id="btnDelete" class="btn btn-link text-white fs-5" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+        <div class="d-flex gap-3 align-items-center position-relative">
+            <button id="btnDelete" class="btn btn-link text-white fs-5" title="Eliminar">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+            
+            <button id="btnMoreOptions" class="btn btn-link text-white fs-5" title="Más opciones">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        
+            <div id="modalDropdown" class="gp-dropdown-menu d-none">
+                <button class="gp-dropdown-item" id="btnAddToAlbum">
+                    <i class="far fa-folder-open"></i> 
+                    <span>Añadir a un álbum</span>
+                </button>
+                <a href="#" class="gp-dropdown-item" id="btnDownload" download target="_blank">
+                    <i class="fas fa-download"></i>
+                    <span>Descargar</span>
+                </a>
+            </div>
         </div>
     </div>
 

@@ -332,3 +332,47 @@ body {
 }
 
 .nav-arrow:hover { opacity: 1 !important; transform: scale(1.1); transition: 0.2s; }
+
+/* --- MENÚ DESPLEGABLE TIPO GOOGLE PHOTOS --- */
+.gp-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 220px;
+    background-color: #303134; /* Gris oscuro material */
+    border-radius: 4px;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+    z-index: 2010;
+    padding: 8px 0;
+    margin-top: 0px;
+    overflow: hidden;
+}
+
+.gp-dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    color: var(--gp-text-main); /* Texto blanco suave */
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.1s;
+    font-family: 'Roboto', sans-serif;
+}
+
+.gp-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08); /* Hover sutil */
+    color: #fff;
+}
+
+.gp-dropdown-item i {
+    width: 24px;
+    margin-right: 12px;
+    text-align: center;
+    font-size: 16px;
+    color: var(--gp-text-main);
+}
