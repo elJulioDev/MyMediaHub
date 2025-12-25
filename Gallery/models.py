@@ -1,6 +1,8 @@
 from django.db import models
 from .storage import ImageKitStorage
-import os
+import base64
+import io
+from PIL import Image
 
 class Album(models.Model):
     nombre = models.CharField(max_length=100, help_text="Nombre del álbum.")
@@ -59,6 +61,9 @@ class MediaFile(models.Model):
     creado_en = models.DateTimeField(auto_now_add=True)
     albumes = models.ManyToManyField(Album, related_name='archivos', blank=True)
 
+    # --- NUEVO CAMPO PARA LQIP ---
+    # Guardará la imagen codificada en base64 (muy pequeña)
+    thumbnail_base64 = models.TextField(blank=True, null=True, editable=False)
     class Meta:
         verbose_name = "Archivo Multimedia"
         verbose_name_plural = "Archivos Multimedia"
@@ -77,6 +82,47 @@ class MediaFile(models.Model):
             else:
                 self.tipo = 'imagen'
         
+        if self.archivo and self.tamano == 0:
+            try:
+                self.tamano = self.archivo.size
+            except: pass
+
+        super().save(*args, **kwargs)
+
+        # --- NUEVA LÓGICA LQIP (Generar Base64) ---
+        # Solo generamos si es imagen/gif y aún no tiene miniatura
+        if self.archivo and (self.tipo == 'imagen' or self.tipo == 'gif') and not self.thumbnail_base64:
+            try:
+                # Aseguramos leer desde el inicio del archivo
+                if hasattr(self.archivo, 'seek'):
+                    self.archivo.seek(0)
+                
+                # Abrimos imagen con Pillow
+                img = Image.open(self.archivo)
+                
+                # Convertimos a RGB (necesario si es PNG/GIF con transparencia) para guardar como JPEG
+                if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                    img = img.convert('RGB')
+                
+                # Redimensionamos a algo MINÚSCULO (ej. 20x20px) para que el string base64 sea corto
+                img.thumbnail((20, 20))
+                
+                # Guardamos en memoria
+                buffer = io.BytesIO()
+                img.save(buffer, format='JPEG', quality=60)
+                
+                # Convertimos a string base64
+                img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                self.thumbnail_base64 = f"data:image/jpeg;base64,{img_str}"
+                
+                # IMPORTANTE: Resetear el puntero del archivo para que ImageKitStorage pueda leerlo después
+                if hasattr(self.archivo, 'seek'):
+                    self.archivo.seek(0)
+                    
+            except Exception as e:
+                print(f"Error generando LQIP para {self.nombre}: {e}")
+
+        # 3. Lógica existente de tamaño
         if self.archivo and self.tamano == 0:
             try:
                 self.tamano = self.archivo.size

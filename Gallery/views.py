@@ -279,8 +279,9 @@ def sincronizar_galeria(request):
 def eliminar_archivo(request):
     """
     Elimina archivo de DB y Nube.
+    CORRECCIÓN: Si falla la nube, cancela el borrado local.
     """
-    #if not request.user.is_staff:
+    # if not request.user.is_staff:
     #    return JsonResponse({'error': 'No autorizado'}, status=403)
 
     archivo_id = request.POST.get('archivo_id')
@@ -290,13 +291,20 @@ def eliminar_archivo(request):
     try:
         archivo = MediaFile.objects.get(id=archivo_id)
         
+        # 1. Intentamos borrar de la nube PRIMERO
         if archivo.file_id:
             try:
-                # USAMOS LA FUNCIÓN SEGURA
                 safe_delete_file(archivo.file_id)
             except Exception as e:
-                print(f"Advertencia borrado nube: {e}")
+                # ¡AQUÍ ESTÁ LA CLAVE!
+                # Si falla la nube, detenemos todo y devolvemos el error al usuario.
+                # No borramos el registro local.
+                print(f"Error crítico borrando en nube: {e}")
+                return JsonResponse({
+                    'error': f'No se pudo borrar de la nube. El archivo NO se ha eliminado. Detalle: {str(e)}'
+                }, status=500)
 
+        # 2. Solo si el paso 1 tuvo éxito (o no había file_id), borramos localmente
         archivo.delete()
         return JsonResponse({'success': True})
         
@@ -359,3 +367,46 @@ def ver_perfil(request):
         }
     }
     return render(request, 'perfil.html', context)
+
+def ver_detalle_global(request, archivo_id):
+    """
+    Vista dedicada para ver un archivo individual navegando por
+    la línea de tiempo principal (Index).
+    """
+    # 1. Obtener el archivo actual
+    archivo = get_object_or_404(MediaFile, id=archivo_id)
+    
+    # 2. Obtener IDs vecinos para navegación (Next/Prev)
+    # IMPORTANTE: Debe usar el mismo orden que el index (-creado_en)
+    qs = MediaFile.objects.all().order_by('-creado_en')
+    ids = list(qs.values_list('id', flat=True))
+    
+    prev_id = None
+    next_id = None
+    
+    try:
+        current_idx = ids.index(archivo.id)
+        # En orden descendente:
+        # Prev es el índice ANTERIOR (menos reciente en la lista, pero más nuevo en fecha)
+        if current_idx > 0:
+            prev_id = ids[current_idx - 1]
+        
+        # Next es el índice SIGUIENTE (más antiguo en fecha)
+        if current_idx < len(ids) - 1:
+            next_id = ids[current_idx + 1]
+            
+    except ValueError:
+        pass # El archivo no está en la lista (raro)
+
+    # 3. Contexto similar al index
+    context = {
+        'archivo': archivo,
+        'prev_id': prev_id,
+        'next_id': next_id,
+        'title': archivo.nombre or 'Detalle',
+        # Pasamos API keys para scripts si fuera necesario
+        'api_conf': {
+            'private_key': getattr(settings, 'IMAGEKIT_PRIVATE_KEY', '')
+        }
+    }
+    return render(request, 'ver_archivo.html', context)

@@ -376,3 +376,25 @@ body {
     font-size: 16px;
     color: var(--gp-text-main);
 }
+
+/* --- EFECTO BLUR-UP --- */
+.blur-up {
+    filter: blur(10px); /* Empieza borroso (el base64 de 20px) */
+    transition: filter 0.3s ease;
+    transform: scale(1.05); /* Escala un poco para evitar bordes blancos por el blur */
+}
+
+.blur-up.loaded {
+    /* Cuando se carga la real, quitamos el filtro via JS si quisieras,
+       pero el truco del onload inline cambiará el src.
+       Al cambiar el src a la imagen HQ, el navegador quitará el blur visualmente si quitamos la clase,
+       o podemos dejar que se vea nítida así: */
+    filter: blur(0);
+    transform: scale(1);
+}
+
+/* IMPORTANTE: Asegúrate de que .photo-item tenga overflow hidden para cortar los bordes borrosos */
+.photo-item {
+    overflow: hidden; 
+    /* ... resto de tus estilos ... */
+}

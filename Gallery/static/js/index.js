@@ -1,6 +1,7 @@
 const modal = document.getElementById('modal');
 const modalContent = document.getElementById('modalContent');
 const mediaItems = Array.from(document.querySelectorAll('.open-media')); 
+const appContainer = document.querySelector('.app-container'); // Referencia al fondo
 
 // Elementos de la barra
 const modalLoader = document.getElementById('modalLoader');
@@ -9,7 +10,6 @@ const modalProgressText = document.getElementById('modalProgressText');
 
 let currentIndex = -1; 
 let currentXhr = null; 
-let preloadController = null;
 
 // --- NUEVAS REFERENCIAS ---
 const btnMoreOptions = document.getElementById('btnMoreOptions');
@@ -19,13 +19,12 @@ const btnAddToAlbum = document.getElementById('btnAddToAlbum');
 
 // 1. Lógica para abrir/cerrar el menú
 btnMoreOptions.addEventListener('click', (e) => {
-    e.stopPropagation(); // Evita que el click cierre el modal
+    e.stopPropagation(); 
     modalDropdown.classList.toggle('d-none');
 });
 
-// 2. Cerrar el menú si hacemos click fuera de él
+// 2. Cerrar el menú si hacemos click fuera
 document.addEventListener('click', (e) => {
-    // Si el menú está abierto y el click NO fue en el botón ni en el menú...
     if (!modalDropdown.classList.contains('d-none') && 
         !modalDropdown.contains(e.target) && 
         !btnMoreOptions.contains(e.target)) {
@@ -33,7 +32,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// 3. Placeholder para la opción de álbum (por ahora)
 btnAddToAlbum.addEventListener('click', () => {
     alert('Funcionalidad "Añadir a álbum" próximamente.');
     modalDropdown.classList.add('d-none');
@@ -42,126 +40,43 @@ btnAddToAlbum.addEventListener('click', () => {
 // --- OPTIMIZACIÓN 1: URLs INTELIGENTES ---
 function getOptimizedUrl(fullUrl, isVideo = false) {
     const separator = fullUrl.includes('?') ? '&' : '?';
-
-    if (isVideo) {
-        // Mantenemos orig-true para videos para evitar gastar VPUs en transcoding
-        return `${fullUrl}${separator}tr=orig-true`;
-    }
+    if (isVideo) return `${fullUrl}${separator}tr=orig-true`;
     
-    // Para IMÁGENES:
+    // Optimización de imágenes
     const width = window.innerWidth;
-    // Redondeamos a múltiplos de 200px para aumentar el "Cache Hit Ratio"
-    // (Si la pantalla es 1366 o 1400, ambos usarán la versión de 1400px cacheada)
     const roundedWidth = Math.ceil(width / 200) * 200; 
-    
-    // AGREGAMOS: f-auto (WebP/AVIF) y q-auto (Calidad inteligente)
-    // Esto reduce el peso un 30-50% extra comparado con solo redimensionar
-    const transformations = `tr=w-${roundedWidth},f-auto,q-auto`; 
-    
-    return `${fullUrl}${separator}${transformations}`;
+    return `${fullUrl}${separator}tr=w-${roundedWidth},f-auto,q-auto`; 
 }
 
-// 2. PRECARGA (Reducida a 1 para ahorrar ancho de banda si el usuario cierra rápido)
-function preloadNextFiles(startIndex) {
-    // 1. MATAR PROCESOS ZOMBIE:
-    // Si había una precarga en curso, la cancelamos inmediatamente para liberar red y CPU.
-    if (preloadController) {
-        preloadController.abort();
-    }
-    
-    // Nuevo controlador para la solicitud actual
-    preloadController = new AbortController();
-    const signal = preloadController.signal;
-
-    const prefetchCount = 1; 
-    for (let i = 1; i <= prefetchCount; i++) {
-        const nextIndex = startIndex + i;
-        if (nextIndex >= mediaItems.length) break;
-
-        const item = mediaItems[nextIndex];
-        const rawUrl = item.getAttribute('data-full-url');
-        
-        // Solo precargamos si no es video
-        if (item.querySelector('.fa-play-circle') === null) { 
-            const url = getOptimizedUrl(rawUrl, false);
-            
-            // 2. PRECARGA PASIVA (Lightweight):
-            // Usamos fetch en lugar de new Image().
-            // 'fetch' guarda el archivo en el caché de disco (Disk Cache) pero NO lo decodifica.
-            // Esto evita que la interfaz se congele (lag) mientras ves la foto actual.
-            fetch(url, { signal, mode: 'cors' })
-                .then(response => {
-                    // Forzamos la lectura del stream para asegurar que se guarde en caché
-                    if(response.ok) return response.blob(); 
-                })
-                .catch(err => {
-                    // Si se cancela (AbortError), no hacemos nada (es lo esperado)
-                });
-        }
-    }
-}
-
-// 3. CARGA CON XHR (Sin cambios, funciona bien)
-function loadImageWithXHR(url) {
-    return new Promise((resolve, reject) => {
-        if (currentXhr) { currentXhr.abort(); } 
-
-        const xhr = new XMLHttpRequest();
-        currentXhr = xhr;
-
-        xhr.open('GET', url, true);
-        xhr.responseType = 'blob';
-
-        xhr.onprogress = (event) => {
-            if (event.lengthComputable) {
-                const percentComplete = (event.loaded / event.total) * 100;
-                updateProgressBar(percentComplete, `Cargando... ${Math.round(percentComplete)}%`);
-            } else {
-                updateProgressBar(100, "Procesando imagen...");
-            }
-        };
-
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                updateProgressBar(100, "Completado");
-                resolve(window.URL.createObjectURL(xhr.response));
-            } else {
-                reject(new Error(`Error HTTP: ${xhr.status}`));
-            }
-            currentXhr = null;
-        };
-
-        xhr.onerror = () => {
-            reject(new Error('Error de Red / CORS'));
-            currentXhr = null;
-        };
-        
-        xhr.send();
-    });
-}
-
-function updateProgressBar(percent, text) {
-    modalLoader.classList.remove('d-none');
-    modalProgressBar.style.width = percent + '%';
-    if (text) modalProgressText.innerText = text;
-    
-    if (percent >= 100 && text === "Completado") {
-        setTimeout(() => {
-            modalLoader.classList.add('d-none');
-            modalProgressBar.style.width = '0%'; 
-        }, 300);
-    }
-}
-
-// 4. ABRIR MODAL (Optimizado)
+// --- FUNCIÓN PRINCIPAL: ABRIR MODAL ---
 async function openModal(index) {
     if (index < 0 || index >= mediaItems.length) return;
+
+    // A. LIMPIEZA DE MEMORIA
+    if (modalContent.firstChild) {
+        if (modalContent.firstChild.tagName === 'IMG') {
+            modalContent.firstChild.src = ''; 
+            modalContent.firstChild.removeAttribute('src');
+        } else if (modalContent.firstChild.tagName === 'VIDEO') {
+            modalContent.firstChild.pause();
+            modalContent.firstChild.src = '';
+            modalContent.firstChild.load();
+        }
+    }
+    modalContent.innerHTML = ''; 
+
+    // B. OPTIMIZACIÓN DE RENDIMIENTO (LA SOLUCIÓN AL LAG)
+    // "Congelamos" el fondo. visibility:hidden mantiene el scroll pero detiene el "paint" del navegador.
+    if (appContainer) {
+        appContainer.style.visibility = 'hidden'; 
+    }
+    document.body.style.backgroundColor = '#131314'; // Aseguramos fondo negro puro
 
     currentIndex = index;
     const item = mediaItems[index];
     const rawUrl = item.getAttribute('data-full-url');
 
-    // Configuración del botón de descarga (igual que antes)
+    // Configurar descarga
     if (btnDownload) {
         btnDownload.removeAttribute('href');
         btnDownload.style.cursor = 'pointer';
@@ -176,9 +91,8 @@ async function openModal(index) {
 
     const isVideo = item.querySelector('.fa-play-circle') !== null;
     
-    // Limpieza
-    modalContent.innerHTML = ''; 
-    modalLoader.classList.add('d-none'); // Ocultamos la barra de carga compleja
+    // UI Inicial
+    modalLoader.classList.add('d-none'); 
     modal.classList.remove('d-none'); 
     document.body.style.overflow = 'hidden'; 
     modal.focus();
@@ -186,22 +100,19 @@ async function openModal(index) {
     const finalUrl = getOptimizedUrl(rawUrl, isVideo);
 
     if (isVideo) {
-        // Lógica de video (igual que antes, usa tr=orig-true)
         const video = document.createElement('video');
         video.src = finalUrl;
         video.controls = true;
         video.autoplay = true;
-        video.style.maxWidth = '100%';
-        video.style.maxHeight = '90vh';
+        // GPU Acceleration para video
+        video.style.transform = "translateZ(0)";
+        video.style.willChange = "transform";
+        Object.assign(video.style, { maxWidth: '100%', maxHeight: '90vh' });
         modalContent.appendChild(video);
     } else {
-        // --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE ---
-        
-        // 1. Mostrar miniatura borrosa (efecto "blur-up") inmediatamente
-        // Usamos la que ya tiene el navegador en caché del index
+        // 1. Miniatura Blur-up
         const thumbImg = item.querySelector('img');
         let placeholder = null;
-        
         if (thumbImg) {
             placeholder = document.createElement('img');
             placeholder.src = thumbImg.src;
@@ -212,66 +123,77 @@ async function openModal(index) {
             modalContent.appendChild(placeholder);
         }
 
-        // 2. Mostrar spinner simple (sin porcentaje)
-        modalProgressText.innerText = "Cargando...";
+        // 2. Spinner
+        modalProgressText.innerText = "Cargando HD...";
         modalLoader.classList.remove('d-none');
-        modalProgressBar.style.width = '100%'; // Barra llena animada o estática
+        modalProgressBar.style.width = '100%'; 
 
-        // 3. Crear imagen final NATIVA
+        // 3. IMAGEN OPTIMIZADA (GIF/JPG)
         const img = document.createElement('img');
         
+        img.fetchPriority = "high"; // Prioridad de Red
+        img.decoding = "async";     // Prioridad de CPU (Decodificación)
+
+        // >>> OPTIMIZACIÓN CLAVE GPU <<<
+        // Mueve la imagen a su propia capa compositora. Evita repintados al mover el mouse.
+        img.style.transform = "translateZ(0)";
+        img.style.willChange = "transform, opacity";
+        img.style.backfaceVisibility = "hidden";
+
         img.onload = () => {
-            // Cuando el navegador termine de bajarla:
-            img.style.opacity = '1';     // La mostramos suavemente
-            if (placeholder) placeholder.remove(); // Quitamos la borrosa
-            modalLoader.classList.add('d-none');   // Quitamos el loader
+            img.style.opacity = '1';     
+            if (placeholder) placeholder.remove(); 
+            modalLoader.classList.add('d-none');   
         };
 
         img.onerror = () => {
             modalProgressText.innerText = "Error al cargar";
         };
 
-        // Estilos para la transición
         Object.assign(img.style, {
             maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain',
             zIndex: '2', position: 'relative', opacity: '0', transition: 'opacity 0.3s ease'
         });
 
-        // Asignar SRC al final dispara la carga usando la caché del navegador/ServiceWorker
         img.src = finalUrl;
-        
         modalContent.appendChild(img);
-        
-        // NO llamamos a preloadNextFiles(index); AHORRO DE REQUESTS
     }
 }
 
-// --- FUNCIÓN PARA FORZAR DESCARGA ---
-function forceDownload(url, filename) {
-    // Mostramos feedback visual (opcional, reutilizando tu loader)
-    updateProgressBar(10, "Preparando descarga...");
+function closeModal() {
+    // 1. Limpieza de memoria
+    if (modalContent.firstChild) {
+         modalContent.firstChild.src = ''; 
+    }
+    modalContent.innerHTML = ''; 
     
-    fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error('Network error');
-            // Leemos el tamaño para la barra de progreso (si el servidor lo envía)
-            const contentLength = response.headers.get('content-length');
-            const total = parseInt(contentLength, 10);
-            let loaded = 0;
+    // 2. Restaurar interfaz
+    modal.classList.add('d-none');
+    modalLoader.classList.add('d-none'); 
+    document.body.style.overflow = 'auto';
 
-            const reader = response.body.getReader();
+    // 3. RESTAURAR FONDO (Vuelve a pintar la grilla)
+    if (appContainer) {
+        appContainer.style.visibility = 'visible';
+    }
+}
+
+// --- UTILIDADES ---
+function forceDownload(url, filename) {
+    updateProgressBar(10, "Iniciando...");
+    fetch(url)
+        .then(r => {
+            if (!r.ok) throw new Error('Network error');
+            const total = parseInt(r.headers.get('content-length') || 0, 10);
+            let loaded = 0;
+            const reader = r.body.getReader();
             return new ReadableStream({
                 start(controller) {
                     function push() {
                         reader.read().then(({ done, value }) => {
-                            if (done) {
-                                controller.close();
-                                return;
-                            }
+                            if (done) { controller.close(); return; }
                             loaded += value.byteLength;
-                            if (total) {
-                                updateProgressBar((loaded/total)*100, "Descargando...");
-                            }
+                            if (total) updateProgressBar((loaded/total)*100, "Descargando...");
                             controller.enqueue(value);
                             push();
                         });
@@ -281,55 +203,32 @@ function forceDownload(url, filename) {
             });
         })
         .then(stream => new Response(stream))
-        .then(response => response.blob())
+        .then(r => r.blob())
         .then(blob => {
             const blobUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = blobUrl;
-            a.download = filename; // Nombre forzado
-            document.body.appendChild(a);
-            a.click();
-            
-            // Limpieza
-            window.URL.revokeObjectURL(blobUrl);
-            document.body.removeChild(a);
+            a.style.display = 'none'; a.href = blobUrl; a.download = filename;
+            document.body.appendChild(a); a.click();
+            window.URL.revokeObjectURL(blobUrl); document.body.removeChild(a);
             updateProgressBar(100, "Completado");
         })
         .catch(err => {
             console.error(err);
-            alert("No se pudo descargar el archivo. Intentando abrir en pestaña nueva.");
-            window.open(url, '_blank'); // Fallback
+            window.open(url, '_blank');
             modalLoader.classList.add('d-none');
         });
 }
 
-function createFinalImage(source, placeholder, isBlob) {
-    const img = document.createElement('img');
-    img.src = source;
-    Object.assign(img.style, {
-        maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain',
-        zIndex: '2', position: 'relative', opacity: '0', transition: 'opacity 0.3s ease'
-    });
-    
-    img.onload = () => {
-        img.style.opacity = '1';
-        if (placeholder) placeholder.remove();
-        if (isBlob) window.URL.revokeObjectURL(source);
-    };
-    
-    modalContent.appendChild(img);
+function updateProgressBar(percent, text) {
+    modalLoader.classList.remove('d-none');
+    modalProgressBar.style.width = percent + '%';
+    if (text) modalProgressText.innerText = text;
+    if (percent >= 100 && text === "Completado") {
+        setTimeout(() => { modalLoader.classList.add('d-none'); modalProgressBar.style.width = '0%'; }, 300);
+    }
 }
 
-function closeModal() {
-    if (currentXhr) { currentXhr.abort(); currentXhr = null; }
-    modal.classList.add('d-none');
-    modalContent.innerHTML = '';
-    modalLoader.classList.add('d-none'); 
-    document.body.style.overflow = 'auto';
-}
-
-// --- EVENTOS ---
+// --- EVENTOS DE NAVEGACIÓN ---
 mediaItems.forEach((item, index) => {
     item.addEventListener('click', () => openModal(index));
 });
@@ -341,23 +240,46 @@ document.getElementById('nextBtn').addEventListener('click', (e) => { e.stopProp
 document.getElementById('prevBtn').addEventListener('click', (e) => { e.stopPropagation(); prevImage(); });
 document.getElementById('closeModal').addEventListener('click', closeModal);
 
-document.addEventListener('keydown', (e) => {
-    if (modal.classList.contains('d-none')) return;
-    switch(e.key) {
-        case 'ArrowRight': nextImage(); break;
-        case 'ArrowLeft': prevImage(); break;
-        case 'Escape': closeModal(); break;
-        case 'Delete': deleteCurrentFile(); break;
+// --- MODAL DE BORRADO ---
+const deleteModalEl = document.getElementById('deleteConfirmModal');
+const deleteModalBootstrap = new bootstrap.Modal(deleteModalEl);
+const btnConfirmDeleteAction = document.getElementById('btnConfirmDeleteAction');
+
+function promptDeleteFile() {
+    // Cerramos el menú dropdown
+    if (!modalDropdown.classList.contains('d-none')) {
+        modalDropdown.classList.add('d-none');
+    }
+    
+    // TRUCO DE RENDIMIENTO:
+    // Si hay un GIF pesado, le bajamos la opacidad para que el navegador
+    // no se mate intentando renderizar cada frame con alta fidelidad detrás del modal.
+    const img = modalContent.querySelector('img');
+    if (img) {
+        img.style.opacity = '0.3'; // Atenuar visualmente
+        img.style.willChange = 'auto'; // Liberar GPU momentáneamente
+    }
+    
+    deleteModalBootstrap.show();
+}
+
+// Y restauramos la opacidad si el usuario CANCELA el borrado
+deleteModalEl.addEventListener('hidden.bs.modal', function () {
+    const img = modalContent.querySelector('img');
+    if (img) {
+        img.style.opacity = '1';
+        img.style.willChange = 'transform, opacity'; // Reactivar GPU
     }
 });
 
-// Lógica de borrado (sin cambios)
-document.getElementById('btnDelete').addEventListener('click', deleteCurrentFile);
-function deleteCurrentFile() {
-    if (!confirm('¿Eliminar archivo permanentemente?')) return;
+function executeDeletion() {
     const currentItem = mediaItems[currentIndex];
     const fileId = currentItem.getAttribute('data-id'); 
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const originalBtnText = btnConfirmDeleteAction.innerHTML;
+    
+    btnConfirmDeleteAction.disabled = true;
+    btnConfirmDeleteAction.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Borrando...';
 
     fetch(URLS.eliminar, { 
         method: 'POST',
@@ -366,19 +288,49 @@ function deleteCurrentFile() {
     })
     .then(r => r.json())
     .then(data => {
+        btnConfirmDeleteAction.disabled = false;
+        btnConfirmDeleteAction.innerHTML = originalBtnText;
+        deleteModalBootstrap.hide();
+
         if (data.success) {
             closeModal();
+            // Animación y eliminación del DOM
+            currentItem.style.transition = "transform 0.3s ease, opacity 0.3s ease";
             currentItem.style.transform = "scale(0)";
-            setTimeout(() => { currentItem.remove(); window.location.reload(); }, 300);
+            currentItem.style.opacity = "0";
+            setTimeout(() => { 
+                currentItem.remove(); 
+                const indexToRemove = mediaItems.indexOf(currentItem);
+                if (indexToRemove > -1) mediaItems.splice(indexToRemove, 1);
+            }, 300);
         } else { alert('Error: ' + data.error); }
+    })
+    .catch(err => {
+        btnConfirmDeleteAction.disabled = false;
+        btnConfirmDeleteAction.innerHTML = originalBtnText;
+        deleteModalBootstrap.hide();
+        alert('Error de conexión.');
     });
 }
 
-// --- SERVICE WORKER Y CULLING OPTIMIZADO ---
+document.getElementById('btnDelete').addEventListener('click', promptDeleteFile);
+btnConfirmDeleteAction.addEventListener('click', executeDeletion);
+
+// CONTROL DE TECLADO
+document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('d-none')) return;
+    if (deleteModalEl.classList.contains('show')) {
+        if (e.key === 'Enter') executeDeletion();
+        return;
+    }
+    switch(e.key) {
+        case 'ArrowRight': nextImage(); break;
+        case 'ArrowLeft': prevImage(); break;
+        case 'Escape': closeModal(); break;
+        case 'Delete': promptDeleteFile(); break;
+    }
+});
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(console.error));
 }
-
-// NOTA: Hemos ELIMINADO el IntersectionObserver que borraba el src.
-// Dejamos que el navegador use loading="lazy" nativo (ya presente en tu HTML).
-// Esto es mucho más eficiente y evita parpadeos o re-descargas innecesarias.
