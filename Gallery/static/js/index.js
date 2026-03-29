@@ -42,10 +42,11 @@ function getOptimizedUrl(fullUrl, isVideo = false) {
     const separator = fullUrl.includes('?') ? '&' : '?';
     if (isVideo) return `${fullUrl}${separator}tr=orig-true`;
     
-    // Optimización de imágenes
-    const width = window.innerWidth;
+    // Limitar a 1600px máximo — suficiente para cualquier pantalla
+    // y usar calidad 80 fija para consistencia de caché
+    const width = Math.min(window.innerWidth, 1600);
     const roundedWidth = Math.ceil(width / 200) * 200; 
-    return `${fullUrl}${separator}tr=w-${roundedWidth},f-auto,q-auto`; 
+    return `${fullUrl}${separator}tr=w-${roundedWidth},f-auto,q-80`; 
 }
 
 // --- FUNCIÓN PRINCIPAL: ABRIR MODAL ---

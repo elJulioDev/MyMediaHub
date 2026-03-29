@@ -151,20 +151,14 @@ class MediaFile(models.Model):
         url_base = url_original.split("?")[0]
         
         # Parámetros básicos
-        params = "?tr=w-300,f-auto,q-80,fo-auto"
-        paramsVid = "?tr=w-300,f-auto,q-80"
+        params = "?tr=w-200,h-200,c-at_max,f-auto,q-70"
 
         # Detectar extensión real por si el 'tipo' en base de datos quedó como 'imagen'
         es_webp_animado = str(self.archivo.name).lower().endswith('.webp')
 
         if self.is_video():
-            return f"{url_base}/ik-thumbnail.jpg{paramsVid}"
-            
-        # CAMBIO CLAVE: Si es GIF o WEBP, forzamos /ik-thumbnail.jpg
-        # Esto obliga a ImageKit a extraer un frame estático (JPG/WebP estático)
-        # en lugar de devolver la animación redimensionada.
+            return f"{url_base}/ik-thumbnail.jpg?tr=w-200,h-200,c-at_max,f-auto,q-70"
         elif self.is_gif() or es_webp_animado:
             return f"{url_original}/ik-thumbnail.jpg{params}"
-            
         else:
             return f"{url_base}{params}"

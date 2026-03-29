@@ -196,11 +196,9 @@
                             
                             <img 
                                 src="{{ media.thumbnail_base64|default:media.miniatura_url }}" 
-                                {% if media.thumbnail_base64 %}data-src="{{ media.miniatura_url }}"{% endif %}
-                                alt="Media" 
-                                loading="lazy"
-                                class="{% if media.thumbnail_base64 %}blur-up{% endif %}"
-                                onload="this.classList.add('loaded'); if(this.dataset.src) { this.src = this.dataset.src; }"
+                               {% if media.thumbnail_base64 %}data-src="{{ media.miniatura_url }}"{% endif %}
+                               alt="Media" 
+                               class="{% if media.thumbnail_base64 %}blur-up{% endif %}"
                             >
                             
                             {% if media.is_video %}
@@ -230,6 +228,30 @@
                 <a href="/admin/Galeria/mediafile/add/" class="btn btn-primary rounded-pill px-4 mt-3">Subir ahora</a>
             </div>
         {% endfor %}
+
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-center my-4 gap-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" 
+                   class="btn btn-outline-secondary rounded-pill px-4" 
+                   style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+            
+            <span class="align-self-center" style="color: var(--gp-text-secondary); font-size: 14px;">
+                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" 
+                   class="btn btn-outline-secondary rounded-pill px-4"
+                   style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
 
     </main>
 </div>
@@ -307,6 +329,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/lazyload.js' %}"></script>
 <script src="{% static 'js/index.js' %}"></script>
 
 </body>

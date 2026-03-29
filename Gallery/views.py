@@ -8,6 +8,7 @@ from .models import Album, MediaFile
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
 import requests
+from django.core.paginator import Paginator
 
 # --- HELPERS ROBUSTOS (API DIRECTA) ---
 def safe_list_files(options):
@@ -122,8 +123,13 @@ def index(request):
         # Aplicar filtros
         media_files = media_files.filter(search_filter)
 
+    paginator = Paginator(media_files, 60)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'media_files': media_files,
+        'media_files': page_obj,
+        'page_obj': page_obj,
         'title': 'Galería',
         'active_tab': 'general',
         'query': query,
