@@ -1,14 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.conf import settings
 from .models import Album, MediaFile
-
-# --- NUEVOS IMPORTS PARA API DIRECTA ---
-import requests
+from datetime import datetime
 from requests.auth import HTTPBasicAuth
+import requests
 
 # --- HELPERS ROBUSTOS (API DIRECTA) ---
 def safe_list_files(options):
@@ -49,7 +48,7 @@ def index(request):
     """
     media_files = MediaFile.objects.all().order_by('-creado_en')
 
-    # --- INICIO MODIFICACIÓN: Cálculo detallado ---
+    # Cálculo detallado
     total_bytes = MediaFile.objects.aggregate(Sum('tamano'))['tamano__sum'] or 0
     
     # Calcular bytes por tipo
@@ -67,7 +66,7 @@ def index(request):
         percent_total = (total_bytes / limit_bytes) * 100
         percent_image = (image_bytes / limit_bytes) * 100
         percent_video = (video_bytes / limit_bytes) * 100
-    # --- FIN MODIFICACIÓN ---
+
 
     def format_bytes(size):
         power = 2**10
@@ -88,10 +87,46 @@ def index(request):
         'file_count': media_files.count()
     }
 
+    # 1. Consulta base ordenado por fecha
+    media_files = MediaFile.objects.all().order_by('-creado_en')
+    
+    # 2. Capturar el término de búsqueda
+    query = request.GET.get('q')
+    
+    if query:
+        query = query.strip()
+        search_filter = Q(nombre__icontains=query) # Por defecto busca por nombre
+        
+        # --- LÓGICA DE DETECCIÓN DE FECHA ---
+        date_obj = None
+        
+        # Intentar formato DD/MM/YYYY (ej: 25/12/2023)
+        if '/' in query:
+            try:
+                date_obj = datetime.strptime(query, '%d/%m/%Y')
+            except ValueError:
+                pass
+        
+        # Intentar formato YYYY-MM-DD (ej: 2023-12-25)
+        elif '-' in query:
+            try:
+                date_obj = datetime.strptime(query, '%Y-%m-%d')
+            except ValueError:
+                pass
+                
+        # Si se detectó una fecha válida, agregarla al filtro (OR)
+        if date_obj:
+            # Filtramos por el día exacto ignorando la hora
+            search_filter |= Q(creado_en__date=date_obj.date())
+
+        # Aplicar filtros
+        media_files = media_files.filter(search_filter)
+
     context = {
         'media_files': media_files,
         'title': 'Galería',
         'active_tab': 'general',
+        'query': query,
         'storage': storage_data
     }
     return render(request, 'index.html', context)

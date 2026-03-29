@@ -164,10 +164,21 @@
         {% endif %}
 
         <header class="top-bar">
-            <div class="search-box">
+            <form action="{% url 'index' %}" method="GET" class="search-box w-100" style="max-width: 600px;">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar en tu galería...">
-            </div>
+                
+                <input type="text" 
+                       name="q" 
+                       placeholder="Buscar en tu galería..." 
+                       value="{{ query|default:'' }}"
+                       autocomplete="off">
+                       
+                {% if query %}
+                    <a href="{% url 'index' %}" class="text-decoration-none text-secondary me-2">
+                        <i class="fas fa-times"></i>
+                    </a>
+                {% endif %}
+            </form>
         </header>
 
         {% regroup media_files by creado_en|date:"F Y" as media_by_month %}
@@ -198,13 +209,16 @@
                                 </div>
                             {% endif %}
                             
-                            {% if media.is_gif %}
+                            {% if media.is_webp %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
+                                </div>
+                            {% elif media.is_gif %}
                                 <div class="position-absolute top-0 end-0 m-2">
                                     <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
                                 </div>
                             {% endif %}
-
-                        </div>
+                            </div>
                     {% endfor %}
                 </div>
             </div>
@@ -250,8 +264,11 @@
     <button id="prevBtn" class="nav-arrow left" style="position:absolute; left:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❮</button>
     <button id="nextBtn" class="nav-arrow right" style="position:absolute; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❯</button>
 
-    <div id="modalContent" style="width:100%; height:85%; display: flex; align-items: center; justify-content: center;"></div>
-
+    <div id="modalContent" style="width:100%; height:100%; display: flex; align-items: center; justify-content: center;">
+        <img id="modalImg" class="d-none" style="max-width: 100%; max-height: 90vh; object-fit: contain; transform: translateZ(0); will-change: transform, opacity;">
+        <video id="modalVideo" class="d-none" controls autoplay style="max-width: 100%; max-height: 90vh; transform: translateZ(0);"></video>
+    </div>
+    
     <div id="modalLoader" class="modal-loader-container d-none">
         <div class="modal-progress-bg">
             <div id="modalProgressBar" class="modal-progress-bar"></div>

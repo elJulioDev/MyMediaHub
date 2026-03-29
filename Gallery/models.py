@@ -62,8 +62,8 @@ class MediaFile(models.Model):
     albumes = models.ManyToManyField(Album, related_name='archivos', blank=True)
 
     # --- NUEVO CAMPO PARA LQIP ---
-    # Guardará la imagen codificada en base64 (muy pequeña)
     thumbnail_base64 = models.TextField(blank=True, null=True, editable=False)
+    
     class Meta:
         verbose_name = "Archivo Multimedia"
         verbose_name_plural = "Archivos Multimedia"
@@ -73,12 +73,15 @@ class MediaFile(models.Model):
         return self.nombre or str(self.archivo.name)
 
     def save(self, *args, **kwargs):
+        # 1. DETECCIÓN DE TIPO CORREGIDA
         if self.archivo and not self.tipo:
             name = str(self.archivo.name).lower()
             if name.endswith(('.mp4', '.mov', '.avi', '.webm', '.mkv')):
                 self.tipo = 'video'
-            elif name.endswith('.gif'):
-                self.tipo = 'gif'
+            # AQUI EL CAMBIO: Agregamos .webp a la detección de "animaciones"
+            # Esto ayuda a que lógica interna considere que puede moverse
+            elif name.endswith(('.gif', '.webp')):
+                self.tipo = 'gif' 
             else:
                 self.tipo = 'imagen'
         
@@ -89,73 +92,78 @@ class MediaFile(models.Model):
 
         super().save(*args, **kwargs)
 
-        # --- NUEVA LÓGICA LQIP (Generar Base64) ---
-        # Solo generamos si es imagen/gif y aún no tiene miniatura
+        # 2. GENERACIÓN DE LQIP (Base64 borroso)
+        # La lógica de Pillow seek(0) funciona para WebP animados también
         if self.archivo and (self.tipo == 'imagen' or self.tipo == 'gif') and not self.thumbnail_base64:
             try:
-                # Aseguramos leer desde el inicio del archivo
                 if hasattr(self.archivo, 'seek'):
                     self.archivo.seek(0)
                 
-                # Abrimos imagen con Pillow
                 img = Image.open(self.archivo)
                 
-                # Convertimos a RGB (necesario si es PNG/GIF con transparencia) para guardar como JPEG
+                # Aseguramos el primer frame si es animado
+                try:
+                    img.seek(0)
+                except:
+                    pass
+
+                # Convertimos a RGB
                 if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
                     img = img.convert('RGB')
                 
-                # Redimensionamos a algo MINÚSCULO (ej. 20x20px) para que el string base64 sea corto
                 img.thumbnail((20, 20))
                 
-                # Guardamos en memoria
                 buffer = io.BytesIO()
                 img.save(buffer, format='JPEG', quality=60)
                 
-                # Convertimos a string base64
                 img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
                 self.thumbnail_base64 = f"data:image/jpeg;base64,{img_str}"
                 
-                # IMPORTANTE: Resetear el puntero del archivo para que ImageKitStorage pueda leerlo después
                 if hasattr(self.archivo, 'seek'):
                     self.archivo.seek(0)
                     
             except Exception as e:
                 print(f"Error generando LQIP para {self.nombre}: {e}")
+                # Si falla, guardar cambio de tipo al menos
+                pass
 
-        # 3. Lógica existente de tamaño
-        if self.archivo and self.tamano == 0:
-            try:
-                self.tamano = self.archivo.size
-            except: pass
-
+        # Guardamos de nuevo para persistir el thumbnail_base64
         super().save(*args, **kwargs)
 
     def is_image(self): return self.tipo == 'imagen'
     def is_video(self): return self.tipo == 'video'
     def is_gif(self): return self.tipo == 'gif'
+    def is_webp(self):
+        """Devuelve True si la extensión del archivo es .webp"""
+        if self.archivo:
+             return self.archivo.name.lower().endswith('.webp')
+        return False
 
     @property
     def miniatura_url(self):
         """
-        Genera URL optimizada de 300px para el grid.
-        Ahorra ancho de banda y Video Processing Units.
+        Genera URL optimizada de 300px ESTATICA.
         """
         if not self.archivo:
             return ""
         
         url_original = self.archivo.url
         url_base = url_original.split("?")[0]
-
-        # Parámetros globales de ahorro: 
-        # Ancho fijo, formato automático (WebP), calidad inteligente
+        
+        # Parámetros básicos
         params = "?tr=w-300,f-auto,q-80,fo-auto"
         paramsVid = "?tr=w-300,f-auto,q-80"
 
+        # Detectar extensión real por si el 'tipo' en base de datos quedó como 'imagen'
+        es_webp_animado = str(self.archivo.name).lower().endswith('.webp')
+
         if self.is_video():
-            # CORRECCIÓN: Añadimos params también al thumbnail de video
             return f"{url_base}/ik-thumbnail.jpg{paramsVid}"
             
-        elif self.is_gif():
+        # CAMBIO CLAVE: Si es GIF o WEBP, forzamos /ik-thumbnail.jpg
+        # Esto obliga a ImageKit a extraer un frame estático (JPG/WebP estático)
+        # en lugar de devolver la animación redimensionada.
+        elif self.is_gif() or es_webp_animado:
             return f"{url_original}/ik-thumbnail.jpg{params}"
             
         else:
