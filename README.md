@@ -3,7 +3,7 @@ Este proyecto es una plataforma web robusta desarrollada en Django para la gesti
 
 Está diseñado para ser una solución híbrida que mantiene una base de datos local para la organización lógica (álbumes, usuarios) mientras delega el almacenamiento pesado y el procesamiento de imágenes a la nube.
 
-## 🚀 Características Principales
+## Características Principales
 * **Gestión de Medios Híbrida:**
     * **Cloud Storage (ImageKit):** Subida, almacenamiento y CDN global para archivos.
     * **Sincronización Bidireccional:** Sistema capaz de detectar archivos en la nube y enlazarlos localmente, o eliminar registros locales si se borran en la nube.
@@ -18,7 +18,7 @@ Está diseñado para ser una solución híbrida que mantiene una base de datos l
 * **Dashboard de Almacenamiento:** Visualización gráfica del consumo de espacio (Imágenes vs Videos) y límites de la cuenta.
 * **PWA Ready:** Implementación de Service Workers (`sw.js`) para caché de recursos estáticos y assets de CDN.
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 El proyecto utiliza un stack moderno enfocado en rendimiento y escalabilidad:
 * **Backend:** Python 3, Django 5.2.8
 * **Base de Datos:** MySQL (conector `pymysql`).
@@ -37,7 +37,7 @@ Asegúrate de tener instalado y configurado lo siguiente:
 * Git
 * Virtualenv (recomendado)
 
-## 🔧 Instalación y Configuración
+## Instalación y Configuración
 Sigue estos pasos para levantar el proyecto en tu entorno local:
 
 1. **Clonar el repositorio:**
@@ -99,7 +99,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## 🔐 Uso del Sistema
+## Uso del Sistema
 **1. Panel de Administración (Subida de Archivos)**
 Accede a `/admin/` con tu superusuario.
 
@@ -112,7 +112,7 @@ Accede a `http://localhost:8000/`
 * **Timeline:** Verás tus fotos organizadas por fecha.
 * **Sincronización:** Si subiste archivos directamente a la consola de ImageKit, ve a la sección "Utilidades" -> "Sincronizar Nube" para importarlos a tu galería local.
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 MyMediaHub/
@@ -145,5 +145,5 @@ MyMediaHub/
 └── .gitignore                      # Archivos ignorados (venv, db, .env)
 ```
 
-## 📄 Licencia
+## Licencia
 Este proyecto es de uso personal y educativo.
