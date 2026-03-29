@@ -1,0 +1,164 @@
+{% load static %}
+{% load l10n %}
+
+<nav class="sidebar" id="appSidebar" aria-label="Navegación principal">
+
+    <!-- ═══════════════════════════════════════
+         BRAND / LOGO
+    ═══════════════════════════════════════ -->
+    <div class="sidebar__brand">
+        <div class="sidebar__logo-icon">
+            <img src="{% static 'img/icon.svg' %}" alt="MyMediaHub icon" width="26" height="26">
+        </div>
+        <span class="sidebar__brand-name">MyMediaHub</span>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         UPLOAD BUTTON
+    ═══════════════════════════════════════ -->
+    <div class="sidebar__upload-wrap">
+        <a href="/admin/Gallery/mediafile/add/" class="sidebar__upload-btn" title="Subir nuevo archivo">
+            <span class="sidebar__upload-icon">
+                <i class="fas fa-plus"></i>
+            </span>
+            <span class="sidebar__upload-label">Subir archivo</span>
+        </a>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         NAV — PRINCIPAL
+    ═══════════════════════════════════════ -->
+    <div class="sidebar__section">
+        <a href="{% url 'index' %}" 
+           class="sidebar__nav-item {% if active_tab == 'general' %}is-active{% endif %}"
+           title="Galería principal">
+            <span class="sidebar__nav-icon">
+                {% if active_tab == 'general' %}
+                    <i class="fas fa-image"></i>
+                {% else %}
+                    <i class="far fa-image"></i>
+                {% endif %}
+            </span>
+            <span class="sidebar__nav-label">Principal</span>
+        </a>
+    </div>
+
+    <div class="sidebar__divider"></div>
+
+    <!-- ═══════════════════════════════════════
+         NAV — BIBLIOTECA
+    ═══════════════════════════════════════ -->
+    <div class="sidebar__section">
+        <p class="sidebar__section-title">Biblioteca</p>
+
+        <a href="#" 
+           class="sidebar__nav-item {% if active_tab == 'favoritos' %}is-active{% endif %}"
+           title="Tus favoritos">
+            <span class="sidebar__nav-icon">
+                {% if active_tab == 'favoritos' %}
+                    <i class="fas fa-star"></i>
+                {% else %}
+                    <i class="far fa-star"></i>
+                {% endif %}
+            </span>
+            <span class="sidebar__nav-label">Favoritos</span>
+            <span class="sidebar__nav-badge sidebar__nav-badge--soon">Pronto</span>
+        </a>
+
+        <a href="{% url 'lista_albumes' %}" 
+           class="sidebar__nav-item {% if active_tab == 'albumes' %}is-active{% endif %}"
+           title="Ver todos los álbumes">
+            <span class="sidebar__nav-icon">
+                {% if active_tab == 'albumes' %}
+                    <i class="fas fa-folder"></i>
+                {% else %}
+                    <i class="far fa-folder"></i>
+                {% endif %}
+            </span>
+            <span class="sidebar__nav-label">Álbumes</span>
+        </a>
+
+        <a href="#" 
+           class="sidebar__nav-item {% if active_tab == 'papelera' %}is-active{% endif %}"
+           title="Papelera de reciclaje">
+            <span class="sidebar__nav-icon">
+                {% if active_tab == 'papelera' %}
+                    <i class="fas fa-trash-alt"></i>
+                {% else %}
+                    <i class="far fa-trash-alt"></i>
+                {% endif %}
+            </span>
+            <span class="sidebar__nav-label">Papelera</span>
+            <span class="sidebar__nav-badge sidebar__nav-badge--soon">Pronto</span>
+        </a>
+    </div>
+
+    <div class="sidebar__divider"></div>
+
+    <!-- ═══════════════════════════════════════
+         NAV — UTILIDADES
+    ═══════════════════════════════════════ -->
+    <div class="sidebar__section">
+        <p class="sidebar__section-title">Utilidades</p>
+
+        <a href="{% url 'sincronizar' %}" 
+           class="sidebar__nav-item {% if active_tab == 'sincronizar' %}is-active{% endif %}"
+           title="Sincronizar con la nube">
+            <span class="sidebar__nav-icon">
+                <i class="fas fa-sync-alt {% if active_tab == 'sincronizar' %}fa-spin{% endif %}"></i>
+            </span>
+            <span class="sidebar__nav-label">Sincronizar</span>
+        </a>
+
+        <a href="{% url 'ver_perfil' %}" 
+           class="sidebar__nav-item {% if active_tab == 'perfil' %}is-active{% endif %}"
+           title="Mi perfil y configuración">
+            <span class="sidebar__nav-icon">
+                {% if active_tab == 'perfil' %}
+                    <i class="fas fa-user-circle"></i>
+                {% else %}
+                    <i class="far fa-user-circle"></i>
+                {% endif %}
+            </span>
+            <span class="sidebar__nav-label">Mi Perfil</span>
+        </a>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STORAGE WIDGET
+    ═══════════════════════════════════════ -->
+    {% if storage %}
+    <div class="sidebar__storage">
+        <div class="sidebar__storage-header">
+            <i class="fas fa-cloud sidebar__storage-cloud-icon"></i>
+            <span class="sidebar__storage-title">Almacenamiento</span>
+        </div>
+
+        <div class="sidebar__storage-bar" title="{{ storage.percent|floatformat:1 }}% usado">
+            <div class="sidebar__storage-bar-fill sidebar__storage-bar-fill--image"
+                 style="width: {{ storage.percent_image|unlocalize }}%"
+                 title="Imágenes: {{ storage.image_str|default:'—' }}"></div>
+            <div class="sidebar__storage-bar-fill sidebar__storage-bar-fill--video"
+                 style="width: {{ storage.percent_video|unlocalize }}%"
+                 title="Videos: {{ storage.video_str|default:'—' }}"></div>
+        </div>
+
+        <div class="sidebar__storage-legend">
+            <span class="sidebar__storage-dot sidebar__storage-dot--image"></span>
+            <span class="sidebar__storage-legend-label">Imágenes</span>
+            <span class="sidebar__storage-dot sidebar__storage-dot--video"></span>
+            <span class="sidebar__storage-legend-label">Videos</span>
+        </div>
+
+        <div class="sidebar__storage-numbers">
+            <span>{{ storage.used_str }} <span class="sidebar__storage-sep">/</span> {{ storage.limit_str }}</span>
+            <span class="sidebar__storage-percent">{{ storage.percent|floatformat:1 }}%</span>
+        </div>
+
+        <div class="sidebar__storage-meta">
+            <i class="far fa-file"></i> {{ storage.file_count }} archivos
+        </div>
+    </div>
+    {% endif %}
+
+</nav>

@@ -11,70 +11,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'img/icon.svg' %}">
-    
+
 <style>
     /* --- OPTIMIZACIÓN EXTREMA DE UI (MODO GAMING) --- */
 
     /* 1. Aislar el contenedor del GIF para que no afecte a los botones */
     #modalContent {
-        contain: strict; /* El navegador no recalcula nada fuera de este div */
-        transform: translateZ(0); /* Capa GPU propia */
+        contain: strict;
+        transform: translateZ(0);
     }
 
     /* 2. Blindar los controles (Flechas y Botones Superiores) */
-    #prevBtn, #nextBtn, 
-    .modal-top-bar button, /* Botones de arriba */
+    #prevBtn, #nextBtn,
+    .modal-top-bar button,
     .gp-dropdown-menu {
-        /* Promoción a capa GPU individual */
-        transform: translate3d(0, 0, 0); 
+        transform: translate3d(0, 0, 0);
         backface-visibility: hidden;
         perspective: 1000px;
-        
-        /* Indicar al navegador que estos elementos cambiarán */
-        will-change: transform, opacity; 
-        
-        /* Evitar que el navegador calcule layout/style de los padres */
+        will-change: transform, opacity;
         contain: layout style;
     }
 
     /* 3. Flechas de Navegación Optimizadas */
     .nav-arrow {
-        /* Eliminamos la transición de opacidad suave que es costosa sobre video */
-        transition: transform 0.1s ease !important; 
-        opacity: 0.6 !important; /* Opacidad fija base */
+        transition: transform 0.1s ease !important;
+        opacity: 0.6 !important;
     }
 
     .nav-arrow:hover {
-        opacity: 1 !important; /* Cambio directo sin fade suave */
-        transform: scale(1.1) translateZ(0) !important; /* Mantener en GPU al escalar */
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); /* Sombra barata en GPU */
+        opacity: 1 !important;
+        transform: scale(1.1) translateZ(0) !important;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
     /* 4. Menú Dropdown Acelerado */
     .gp-dropdown-menu {
-        /* Quitar sombras complejas que requieren blending pesado */
         box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
         border: 1px solid rgba(255,255,255,0.1);
-        backdrop-filter: none !important; /* CRÍTICO: El blur mata el rendimiento sobre GIFs */
-        background-color: #202124 !important; /* Fondo sólido opaco es más rápido */
+        backdrop-filter: none !important;
+        background-color: #202124 !important;
     }
-    
+
     /* 5. Contenedor de botones superiores */
     .modal-top-bar {
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        padding: 20px; 
-        display: flex; 
-        justify-content: space-between; 
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
         z-index: 2002;
-        pointer-events: none; /* Truco: El contenedor no captura mouse, solo los hijos */
+        pointer-events: none;
     }
-    
+
     .modal-top-bar > * {
-        pointer-events: auto; /* Reactivamos mouse solo en los botones */
+        pointer-events: auto;
     }
 </style>
 </head>
@@ -86,72 +80,14 @@
 
 <div class="app-container">
 
-    <nav class="sidebar">
-        <div class="brand-area">
-            <i class="fas fa-camera-retro" style="background: -webkit-linear-gradient(45deg, #4285F4, #DB4437, #F4B400, #0F9D58); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;"></i>
-            <span style="font-family: 'Product Sans', sans-serif; font-weight: normal; color: #e8eaed; letter-spacing: -0.5px;">MyMediaHub</span>
-        </div>
-
-        <div class="px-3 mb-4">
-             <a href="/admin/Gallery/mediafile/add/" class="btn w-100 text-start rounded-pill py-2 shadow-sm d-flex align-items-center justify-content-center" 
-                style="background-color: #e8eaed; color: #202124; border: none; font-weight: 500;">
-                <i class="fas fa-plus me-2" style="color: #4285F4;"></i> Subir Archivo
-             </a>
-        </div>
-
-        <a href="{% url 'index' %}" class="nav-item {% if active_tab == 'general' %}active{% endif %}">
-            <i class="far fa-image"></i> Principal
-        </a>
-        
-        <div style="height: 1px; background: var(--gp-border); margin: 10px 24px;"></div>
-
-        <small class="px-4 mb-2 fw-bold" style="font-size: 11px; color: var(--gp-text-secondary); letter-spacing: 0.8px;">BIBLIOTECA</small>
-        
-        <a href="#" class="nav-item">
-            <i class="far fa-star"></i> Favoritos
-        </a>
-        <a href="{% url 'lista_albumes' %}" class="nav-item {% if active_tab == 'albumes' %}active{% endif %}">
-            <i class="far fa-folder"></i> Álbumes
-        </a>
-        <a href="#" class="nav-item">
-            <i class="far fa-trash-alt"></i> Papelera
-        </a>
-        
-        <div style="height: 1px; background: var(--gp-border); margin: 10px 24px;"></div>
-
-        <small class="px-4 mb-2 fw-bold" style="font-size: 11px; color: var(--gp-text-secondary); letter-spacing: 0.8px;">UTILIDADES</small>
-        
-        <a href="{% url 'sincronizar' %}" class="nav-item">
-            <i class="fas fa-sync-alt"></i> Sincronizar Nube
-        </a>
-
-        <a href="{% url 'ver_perfil' %}" class="nav-item">
-            <i class="fas fa-user-circle"></i> Mi Perfil
-        </a>
-
-        <div class="storage-widget">
-             <div class="storage-info">
-                 <span>Almacenamiento</span>
-                 <span class="storage-numbers">{{ storage.used_str }} de {{ storage.limit_str }}</span>
-             </div>
-             
-            <div class="storage-bar-bg" style="display: flex; background-color: #3c4043; border-radius: 10px; overflow: hidden; height: 6px;">
-                <div style="width: {{ storage.percent_image|unlocalize }}%; background-color: #EA4335; height: 100%; transition: width 1s;" 
-                     title="Imágenes"></div>
-                
-                <div style="width: {{ storage.percent_video|unlocalize }}%; background-color: #8ab4f8; height: 100%; transition: width 1s;" 
-                     title="Videos"></div>
-             </div>
-
-             <div class="d-flex justify-content-between mt-2" style="font-size: 11px; color: #9aa0a6;">
-                <span>{{ storage.file_count }} archivos</span>
-                <span>{{ storage.percent|floatformat:1 }}% ocupado</span>
-             </div>
-        </div>
-    </nav>
+    {# ═══════════════════════════════════════════════════════════ #}
+    {# SIDEBAR — componente reutilizable                          #}
+    {# Requiere en contexto: active_tab, storage                 #}
+    {# ═══════════════════════════════════════════════════════════ #}
+    {% include 'partials/_sidebar.html' %}
 
     <main class="main-content">
-        
+
         {% if messages %}
             <div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
                 {% for message in messages %}
@@ -166,13 +102,13 @@
         <header class="top-bar">
             <form action="{% url 'index' %}" method="GET" class="search-box w-100" style="max-width: 600px;">
                 <i class="fas fa-search"></i>
-                
-                <input type="text" 
-                       name="q" 
-                       placeholder="Buscar en tu galería..." 
+
+                <input type="text"
+                       name="q"
+                       placeholder="Buscar en tu galería..."
                        value="{{ query|default:'' }}"
                        autocomplete="off">
-                       
+
                 {% if query %}
                     <a href="{% url 'index' %}" class="text-decoration-none text-secondary me-2">
                         <i class="fas fa-times"></i>
@@ -185,7 +121,7 @@
 
         {% for month in media_by_month %}
             <div class="timeline-group fade-in-up">
-                
+
                 <div class="date-header">
                     <span>{{ month.grouper|capfirst }}</span>
                 </div>
@@ -193,20 +129,21 @@
                 <div class="photo-grid">
                     {% for media in month.list %}
                         <div class="photo-item open-media" data-full-url="{{ media.archivo.url }}" data-id="{{ media.id }}">
-                            
-                            <img 
-                                src="{{ media.thumbnail_base64|default:media.miniatura_url }}" 
+
+                            <img
+                                src="{{ media.thumbnail_base64|default:media.miniatura_url }}"
                                {% if media.thumbnail_base64 %}data-src="{{ media.miniatura_url }}"{% endif %}
-                               alt="Media" 
+                               alt="Media"
                                class="{% if media.thumbnail_base64 %}blur-up{% endif %}"
+                               decoding="async"
                             >
-                            
+
                             {% if media.is_video %}
                                 <div class="position-absolute top-0 end-0 m-2 text-white" style="text-shadow: 0 1px 2px black;">
                                     <i class="fas fa-play-circle fs-5"></i>
                                 </div>
                             {% endif %}
-                            
+
                             {% if media.is_webp %}
                                 <div class="position-absolute top-0 end-0 m-2">
                                     <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
@@ -216,7 +153,7 @@
                                     <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
                                 </div>
                             {% endif %}
-                            </div>
+                        </div>
                     {% endfor %}
                 </div>
             </div>
@@ -225,26 +162,26 @@
                 <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 64px; color: #5f6368;"></i>
                 <h4 style="color: #e8eaed;">Tu galería está vacía</h4>
                 <p style="color: #9aa0a6;">Sube fotos o dale a "Sincronizar" si ya tienes archivos en ImageKit.</p>
-                <a href="/admin/Galeria/mediafile/add/" class="btn btn-primary rounded-pill px-4 mt-3">Subir ahora</a>
+                <a href="/admin/Gallery/mediafile/add/" class="btn btn-primary rounded-pill px-4 mt-3">Subir ahora</a>
             </div>
         {% endfor %}
 
         {% if page_obj.has_other_pages %}
         <div class="d-flex justify-content-center my-4 gap-2">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" 
-                   class="btn btn-outline-secondary rounded-pill px-4" 
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                   class="btn btn-outline-secondary rounded-pill px-4"
                    style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
                     <i class="fas fa-chevron-left"></i> Anterior
                 </a>
             {% endif %}
-            
+
             <span class="align-self-center" style="color: var(--gp-text-secondary); font-size: 14px;">
                 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
             </span>
-            
+
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" 
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
                    class="btn btn-outline-secondary rounded-pill px-4"
                    style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
                     Siguiente <i class="fas fa-chevron-right"></i>
@@ -256,23 +193,31 @@
     </main>
 </div>
 
-<div id="modal" class="d-none" tabindex="-1" style="position:fixed; top:0; left:0; width:100%; height:100%; background-color: #000; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; outline:none;">
-    
+{# ═══════════════════════════════════════════════════════════ #}
+{# MODAL VISOR DE MEDIA                                        #}
+{# ═══════════════════════════════════════════════════════════ #}
+<div id="modal" class="d-none" tabindex="-1"
+     style="position:fixed; top:0; left:0; width:100%; height:100%;
+            background-color: #000; z-index:2000;
+            display:flex; flex-direction:column; align-items:center; justify-content:center; outline:none;">
+
     <div class="modal-top-bar">
-        <button id="closeModal" class="btn btn-link text-white fs-4" style="transform: translateZ(0);"><i class="fas fa-arrow-left"></i></button>
-        
+        <button id="closeModal" class="btn btn-link text-white fs-4" style="transform: translateZ(0);">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+
         <div class="d-flex gap-3 align-items-center position-relative" style="transform: translateZ(0);">
             <button id="btnDelete" class="btn btn-link text-white fs-5" title="Eliminar">
                 <i class="fas fa-trash-alt"></i>
             </button>
-            
+
             <button id="btnMoreOptions" class="btn btn-link text-white fs-5" title="Más opciones">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
-        
+
             <div id="modalDropdown" class="gp-dropdown-menu d-none">
                 <button class="gp-dropdown-item" id="btnAddToAlbum">
-                    <i class="far fa-folder-open"></i> 
+                    <i class="far fa-folder-open"></i>
                     <span>Añadir a un álbum</span>
                 </button>
                 <a href="#" class="gp-dropdown-item" id="btnDownload" download target="_blank">
@@ -283,14 +228,19 @@
         </div>
     </div>
 
-    <button id="prevBtn" class="nav-arrow left" style="position:absolute; left:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❮</button>
-    <button id="nextBtn" class="nav-arrow right" style="position:absolute; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❯</button>
+    <button id="prevBtn" class="nav-arrow left"
+            style="position:absolute; left:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❮</button>
+    <button id="nextBtn" class="nav-arrow right"
+            style="position:absolute; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❯</button>
 
-    <div id="modalContent" style="width:100%; height:100%; display: flex; align-items: center; justify-content: center;">
-        <img id="modalImg" class="d-none" style="max-width: 100%; max-height: 90vh; object-fit: contain; transform: translateZ(0); will-change: transform, opacity;">
-        <video id="modalVideo" class="d-none" controls autoplay style="max-width: 100%; max-height: 90vh; transform: translateZ(0);"></video>
+    <div id="modalContent"
+         style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+        <img id="modalImg" class="d-none"
+             style="max-width:100%; max-height:90vh; object-fit:contain; transform:translateZ(0); will-change:transform,opacity;">
+        <video id="modalVideo" class="d-none" controls autoplay
+               style="max-width:100%; max-height:90vh; transform:translateZ(0);"></video>
     </div>
-    
+
     <div id="modalLoader" class="modal-loader-container d-none">
         <div class="modal-progress-bg">
             <div id="modalProgressBar" class="modal-progress-bar"></div>
@@ -299,18 +249,24 @@
     </div>
 </div>
 
+{# ═══════════════════════════════════════════════════════════ #}
+{# MODAL CONFIRMACIÓN DE BORRADO                              #}
+{# ═══════════════════════════════════════════════════════════ #}
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 2100;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content" style="background-color: #202124; border: 1px solid #5f6368; color: #e8eaed; border-radius: 12px;">
+        <div class="modal-content"
+             style="background-color: #202124; border: 1px solid #5f6368; color: #e8eaed; border-radius: 12px;">
             <div class="modal-body text-center p-4">
                 <div class="mb-3">
                     <i class="fas fa-trash-alt fa-3x text-danger"></i>
                 </div>
                 <h5 class="mb-2 fw-bold">¿Eliminar archivo?</h5>
                 <p class="small text-secondary mb-4">Esta acción no se puede deshacer. El archivo se borrará de la nube y de tu galería.</p>
-                
+
                 <div class="d-flex gap-2 justify-content-center">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal" style="border-color: #5f6368; color: #e8eaed;">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal"
+                            style="border-color: #5f6368; color: #e8eaed;">
                         Cancelar
                     </button>
                     <button type="button" id="btnConfirmDeleteAction" class="btn btn-danger rounded-pill px-4">
