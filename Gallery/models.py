@@ -143,21 +143,22 @@ class MediaFile(models.Model):
     def miniatura_url(self):
         """
         Genera URL optimizada de 200px ESTÁTICA.
+        Usa /ik-thumbnail.jpg para GIFs y WebP animados (extrae el primer frame).
         """
         if not self.archivo:
             return ""
-        
+
         url_original = self.archivo.url
         url_base = url_original.split("?")[0]
-        
+        params = "?tr=w-200,h-200,c-at_max,f-auto,q-70"
+
         es_webp_animado = str(self.archivo.name).lower().endswith('.webp')
 
         if self.is_video():
-            # CORRECTO: ik-thumbnail.jpg es válido SÓLO para extraer frames de video
-            return f"{url_base}/ik-thumbnail.jpg?tr=w-200,h-200,c-at_max,f-auto,q-70"
+            # /ik-thumbnail.jpg extrae frame del video
+            return f"{url_base}/ik-thumbnail.jpg{params}"
         elif self.is_gif() or es_webp_animado:
-            # CORRECCIÓN: Forzar formato a jpg para obtener el 1er frame del GIF (estático)
-            return f"{url_base}?tr=w-200,h-200,c-at_max,f-jpg,q-70"
+            # /ik-thumbnail.jpg extrae el primer frame del GIF/WebP animado
+            return f"{url_original}/ik-thumbnail.jpg{params}"
         else:
-            # Imágenes normales
-            return f"{url_base}?tr=w-200,h-200,c-at_max,f-auto,q-70"
+            return f"{url_base}{params}"
