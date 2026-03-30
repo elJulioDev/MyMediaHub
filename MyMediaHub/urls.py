@@ -16,5 +16,6 @@ urlpatterns = [
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw'),
     path('perfil/', views.ver_perfil, name='ver_perfil'),
     path('ver/<int:archivo_id>/', views.ver_detalle_global, name='ver_detalle_global'),
+    path('logout/', views.index, name="logout"),
     
 ]

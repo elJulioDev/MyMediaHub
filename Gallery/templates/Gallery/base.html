@@ -4,263 +4,310 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#131314">
+  <meta name="theme-color" content="#17181a">
   <title>{% block title %}MyMediaHub{% endblock %}</title>
 
-  {# ── CSS principal unificado ── #}
   {% load static %}
+  {# ── CSS: primero el layout shell, luego el sidebar ── #}
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
   <link rel="icon" type="image/png" href="{% static 'Gallery/img/favicon.png' %}">
-
-  {# ── PWA manifest + service worker ── #}
   <link rel="manifest" href="{% static 'Gallery/manifest.json' %}">
 
-  {# ── Bloque para CSS extra por página ── #}
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 <div class="app-shell">
-
   <header class="topbar">
 
-    {# Hamburger (visible solo en móvil) #}
-    <button class="topbar-hamburger" id="hamburgerBtn" aria-label="Abrir menú" type="button">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    {# Hamburger — solo visible en móvil vía sidebar.css #}
+    <button class="topbar-hamburger" id="hamburgerBtn"
+            aria-label="Abrir menú lateral"
+            aria-expanded="false"
+            aria-controls="sidebar"
+            type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="3" y1="6"  x2="21" y2="6"/>
         <line x1="3" y1="12" x2="21" y2="12"/>
         <line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
 
-    {# Logo / nombre de la app #}
-    <a href="{% url 'index' %}" class="topbar-logo">
-      <img src="{% static 'Gallery/img/logo.png' %}" alt="Logo" class="topbar-logo-img"
-           onerror="this.style.display='none'">
+    {# Logo #}
+    <a href="{% url 'index' %}" class="topbar-logo" title="Inicio">
+      <span class="topbar-logo-icon">
+        {# Ícono SVG inline con gradiente Google #}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
+          <defs>
+            <linearGradient id="tl-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%"   style="stop-color:#4285F4"/>
+              <stop offset="33%"  style="stop-color:#DB4437"/>
+              <stop offset="66%"  style="stop-color:#F4B400"/>
+              <stop offset="100%" style="stop-color:#0F9D58"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#tl-grad)" d="M48 32C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48H48zm0 32h106c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H38c-3.3 0-6-2.7-6-6V80c0-8.8 7.2-16 16-16zm426 96H38c-3.3 0-6-2.7-6-6v-36c0-3.3 2.7-6 6-6h438c3.3 0 6 2.7 6 6v36c0 3.3-2.7 6-6 6zM256 448c-84 0-152-68-152-152s68-152 152-152 152 68 152 152-68 152-152 152zm0-256c-57.3 0-104 46.7-104 104s46.7 104 104 104 104-46.7 104-104-46.7-104-104-104z"/>
+        </svg>
+      </span>
       <span class="topbar-logo-name">MyMediaHub</span>
     </a>
 
-    {# Barra de búsqueda #}
+    {# Search bar #}
     <div class="topbar-search">
       <form action="{% url 'index' %}" method="get" role="search">
-        <svg class="topbar-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        {# Icono lupa #}
+        <svg class="topbar-search-icon" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
+
         <input
           type="search"
           name="q"
+          id="topbarSearchInput"
           class="topbar-search-input"
           placeholder="Buscar fotos, álbumes…"
           value="{{ request.GET.q|default:'' }}"
           autocomplete="off"
           aria-label="Buscar en la galería">
-        <button type="button" class="topbar-search-clear" aria-label="Limpiar búsqueda" tabindex="-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+
+        {# Botón limpiar — JS lo muestra/oculta #}
+        <button type="button" id="searchClearBtn" class="topbar-search-clear"
+                aria-label="Limpiar búsqueda" tabindex="-1">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </form>
     </div>
 
-    {# Botón subir #}
-    <a href="/admin/Gallery/mediafile/add/" class="topbar-upload-btn" title="Subir fotos o videos">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.5" stroke-linecap="round">
-        <polyline points="16 16 12 12 8 16"/>
-        <line x1="12" y1="12" x2="12" y2="21"/>
-        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-      </svg>
-      <span>Subir</span>
-    </a>
-
-    {# Avatar / menú de usuario #}
-    {% if user.is_authenticated %}
-    <div class="topbar-user" tabindex="0"
-         aria-label="Menú de usuario" role="button">
-      {# Iniciales del usuario #}
-      {{ user.username|slice:":2"|upper }}
-
-      <div class="topbar-user-menu" role="menu">
-        <div class="user-menu-info">
-          <div class="user-menu-name">{{ user.get_full_name|default:user.username }}</div>
-          <div class="user-menu-sub">{{ user.email|default:"Usuario" }}</div>
-        </div>
-        {% if user.is_staff %}
-        <a class="user-menu-item" href="{% url 'admin:index' %}" role="menuitem">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-          </svg>
-          Panel Django
-        </a>
-        {% endif %}
-        <a class="user-menu-item is-danger" href="#" role="menuitem">
-        {# <a class="user-menu-item is-danger" href="{% url 'logout' %}" role="menuitem"> #}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Cerrar sesión
-        </a>
-      </div>
-    </div>
-    {% else %}
-    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Iniciar sesión</a>
-    {% endif %}
-
   </header>{# /topbar #}
 
   <div class="body-layout">
 
-    {# Overlay para cerrar sidebar en móvil al tocar fuera #}
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    {# Overlay oscuro para cerrar drawer en móvil #}
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navegación principal">
 
-      {# Botón X para cerrar en móvil #}
-      <button class="sidebar-close-btn" id="sidebarCloseBtn"
-              aria-label="Cerrar menú" type="button">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+      {# Botón X — solo en móvil (sidebar.css lo controla) #}
+      <button class="sidebar__close-btn" id="sidebarCloseBtn"
+              type="button" aria-label="Cerrar menú">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
 
-      {# ── Bloque de cuota de almacenamiento ── #}
-      <div class="sidebar-quota">
-        <div class="quota-label">Almacenamiento</div>
-        <div class="quota-bar">
-          {# porcentaje_usado se inyecta desde el contexto o por defecto 0 #}
-          <div class="quota-bar-fill"
-               style="width: {{ quota_percent|default:0 }}%"></div>
-        </div>
-        <div class="quota-text">
-          <span class="quota-used">{{ quota_used|default:"0 MB" }}</span>
-          <span class="quota-total">de {{ quota_total|default:"∞" }}</span>
-        </div>
+      {# ── UPLOAD BUTTON ── #}
+      <div class="sidebar__upload-wrap">
+        <a href="/admin/Gallery/mediafile/add/"
+           class="sidebar__upload-btn" title="Subir nuevo archivo">
+          <span class="sidebar__upload-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="3" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5"  y1="12" x2="19" y2="12"/>
+            </svg>
+          </span>
+          <span class="sidebar__upload-label">Subir archivo</span>
+        </a>
       </div>
 
-      {# ── Navegación scrollable ── #}
-      <div class="sidebar-scroll">
+      {# ── NAV SCROLLABLE ── #}
+      <div class="sidebar__nav-scroll">
 
-        {# ── Sección principal ── #}
-        <nav class="nav-section">
-
-          <a class="nav-item {% if active_section == 'fotos' %}is-active{% endif %}"
-             href="{% url 'index' %}">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            Fotos
+        {# Sección principal #}
+        <div class="sidebar__section">
+          <a href="{% url 'index' %}"
+             class="sidebar__nav-item {% if active_section == 'fotos' %}is-active{% endif %}"
+             title="Galería principal">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Principal</span>
           </a>
+        </div>
 
-          <a class="nav-item {% if active_section == 'lista_albumes' %}is-active{% endif %}"
-             href="{% url 'lista_albumes' %}">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="3" y="3" width="7" height="7" rx="1"/>
-              <rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/>
-              <rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            Álbumes
+        <div class="sidebar__divider"></div>
+
+        {# Sección Biblioteca #}
+        <div class="sidebar__section">
+          <p class="sidebar__section-title">Biblioteca</p>
+
+          <a href="{% url 'lista_albumes' %}"
+             class="sidebar__nav-item {% if active_section == 'lista_albumes' %}is-active{% endif %}"
+             title="Ver todos los álbumes">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Álbumes</span>
             {% if albums_count %}
-            <span class="nav-badge">{{ albums_count }}</span>
+            <span class="sidebar__nav-badge sidebar__nav-badge--count">{{ albums_count }}</span>
             {% endif %}
           </a>
 
-          <a class="nav-item {% if active_section == '#' %}is-active{% endif %}"
-             href="#">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            Favoritos
+          <a href="#"
+             class="sidebar__nav-item"
+             title="Favoritos (próximamente)">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Favoritos</span>
+            <span class="sidebar__nav-badge sidebar__nav-badge--soon">Pronto</span>
           </a>
 
-          <a class="nav-item {% if active_section == 'videos' %}is-active{% endif %}"
-             href="{% url 'index' %}?tipo=video">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polygon points="23 7 16 12 23 17 23 7"/>
-              <rect x="1" y="5" width="15" height="14" rx="2"/>
-            </svg>
-            Videos
+          <a href="#"
+             class="sidebar__nav-item"
+             title="Papelera (próximamente)">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Papelera</span>
+            <span class="sidebar__nav-badge sidebar__nav-badge--soon">Pronto</span>
+          </a>
+        </div>
+
+        <div class="sidebar__divider"></div>
+
+        {# Sección Utilidades #}
+        <div class="sidebar__section">
+          <p class="sidebar__section-title">Utilidades</p>
+
+          <a href="{% url 'sincronizar' %}"
+             class="sidebar__nav-item {% if active_section == 'sincronizar' %}is-active{% endif %}"
+             title="Sincronizar con la nube">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="1 4 1 10 7 10"/>
+                <polyline points="23 20 23 14 17 14"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Sincronizar</span>
           </a>
 
-        </nav>
-
-        <div class="nav-sep"></div>
-
-        {# ── Sección gestión ── #}
-        <nav class="nav-section">
-          <div class="nav-section-label">Gestión</div>
-
-          <a class="nav-item {% if active_section == 'subir' %}is-active{% endif %}"
-                href="/admin/Gallery/mediafile/add/">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="16 16 12 12 8 16"/>
-              <line x1="12" y1="12" x2="12" y2="21"/>
-              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-            </svg>
-            Subir archivos
+          <a href="{% url 'ver_perfil' %}"
+             class="sidebar__nav-item {% if active_section == 'perfil' %}is-active{% endif %}"
+             title="Mi perfil y configuración">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Mi Perfil</span>
           </a>
 
-          <a class="nav-item {% if active_section == 'sincronizar' %}is-active{% endif %}"
-             href="{% url 'sincronizar' %}">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="1 4 1 10 7 10"/>
-              <polyline points="23 20 23 14 17 14"/>
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
-            Sincronizar
+          {# Admin — solo staff #}
+          {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}"
+             class="sidebar__nav-item"
+             title="Panel de administración">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Panel Django</span>
           </a>
+          {% endif %}
 
-        </nav>
-
-        {# ── Sección admin (solo staff) ── #}
-        {% if user.is_staff %}
-        <div class="nav-sep"></div>
-        <nav class="nav-section">
-          <div class="nav-section-label">Administración</div>
-
-          <a class="nav-item" href="{% url 'admin:index' %}">
-            <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            Panel Django
+          {# Cerrar sesión #}
+          {% if user.is_authenticated %}
+          <a href="{% url 'logout' %}"
+             class="sidebar__nav-item is-danger"
+             title="Cerrar sesión">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">Cerrar sesión</span>
           </a>
+          {% endif %}
 
-        </nav>
-        {% endif %}
+        </div>
 
-      </div>{# /sidebar-scroll #}
+      </div>{# /sidebar__nav-scroll #}
 
-      {# ── Footer: cerrar sesión ── #}
-      <div class="sidebar-footer">
-        {% if user.is_authenticated %}
-        <a class="nav-item is-danger" href="#">
-        {# <a class="nav-item is-danger" href="{% url 'logout' %}"> #}
-          <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
+      {# ── STORAGE WIDGET (parte inferior) ── #}
+      {% if storage %}
+      <div class="sidebar__storage">
+        <div class="sidebar__storage-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round"
+               class="sidebar__storage-cloud-icon"
+               style="color: var(--sb-text-faint); flex-shrink:0;">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
           </svg>
-          Cerrar sesión
-        </a>
-        {% endif %}
+          <span class="sidebar__storage-title">Almacenamiento</span>
+        </div>
+
+        <div class="sidebar__storage-bar"
+             title="{{ storage.percent|floatformat:1 }}% usado">
+          <div class="sidebar__storage-bar-fill sidebar__storage-bar-fill--image"
+               style="width: {{ storage.percent_image|default:0 }}%"
+               title="Imágenes"></div>
+          <div class="sidebar__storage-bar-fill sidebar__storage-bar-fill--video"
+               style="width: {{ storage.percent_video|default:0 }}%"
+               title="Videos"></div>
+        </div>
+
+        <div class="sidebar__storage-legend">
+          <span class="sidebar__storage-dot sidebar__storage-dot--image"></span>
+          <span class="sidebar__storage-legend-label">Imágenes</span>
+          <span class="sidebar__storage-dot sidebar__storage-dot--video"></span>
+          <span class="sidebar__storage-legend-label">Videos</span>
+        </div>
+
+        <div class="sidebar__storage-numbers">
+          <span>
+            {{ storage.used_str }}
+            <span class="sidebar__storage-sep">/</span>
+            {{ storage.limit_str }}
+          </span>
+          <span class="sidebar__storage-percent">{{ storage.percent|floatformat:1 }}%</span>
+        </div>
+
+        <div class="sidebar__storage-meta">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"/>
+          </svg>
+          {{ storage.file_count }} archivo{{ storage.file_count|pluralize:"s" }}
+        </div>
       </div>
+      {% endif %}
 
     </aside>{# /sidebar #}
 
@@ -272,23 +319,22 @@
 
 </div>{# /app-shell #}
 
-{# ── Mensajes flash Django ── #}
 {% if messages %}
 <div class="flash-container" id="flashContainer" role="status" aria-live="polite">
   {% for message in messages %}
   <div class="flash-msg is-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
-    {# Icono según tipo #}
-    {% if message.tags == 'error' %}
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm-.75 3.25h1.5v4h-1.5v-4zm0 5h1.5v1.5h-1.5v-1.5z"/></svg>
-    {% elif message.tags == 'success' %}
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm3.03 3.97-3.78 5.03-1.78-1.78-1.06 1.06 2.5 2.5.53.53.53-.7 4.32-5.75-1.26-.89z"/></svg>
+    {% if message.tags == 'success' %}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    {% elif message.tags == 'error' %}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    {% elif message.tags == 'warning' %}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     {% else %}
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm-.75 3.25h1.5v4h-1.5v-4zm0 5h1.5v1.5h-1.5v-1.5z"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     {% endif %}
     {{ message }}
     <button class="flash-dismiss" onclick="this.parentElement.remove()" aria-label="Cerrar">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="3" stroke-linecap="round">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
@@ -302,23 +348,27 @@
   'use strict';
 
   /* ── Referencias DOM ── */
-  var hamburger   = document.getElementById('hamburgerBtn');
-  var closeBtn    = document.getElementById('sidebarCloseBtn');
-  var sidebar     = document.getElementById('sidebar');
-  var overlay     = document.getElementById('sidebarOverlay');
+  var hamburger  = document.getElementById('hamburgerBtn');
+  var closeBtn   = document.getElementById('sidebarCloseBtn');
+  var sidebar    = document.getElementById('sidebar');
+  var overlay    = document.getElementById('sidebarOverlay');
+  var searchInput= document.getElementById('topbarSearchInput');
+  var clearBtn   = document.getElementById('searchClearBtn');
 
-  /* ── Abrir / cerrar sidebar ── */
+  /* ════════════════════════════════════════
+     SIDEBAR DRAWER (mobile)
+  ════════════════════════════════════════ */
   function openSidebar() {
-    if (sidebar)  sidebar.classList.add('is-open');
-    if (overlay)  overlay.classList.add('is-visible');
-    if (hamburger)hamburger.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';  /* Bloquear body scroll al drawer */
+    sidebar.classList.add('is-open');
+    overlay.classList.add('is-visible');
+    if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeSidebar() {
-    if (sidebar)  sidebar.classList.remove('is-open');
-    if (overlay)  overlay.classList.remove('is-visible');
-    if (hamburger)hamburger.setAttribute('aria-expanded', 'false');
+    sidebar.classList.remove('is-open');
+    overlay.classList.remove('is-visible');
+    if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
   }
 
@@ -328,40 +378,54 @@
 
   /* Cerrar con Escape */
   document.addEventListener('keydown', function (e) {
-    if ((e.key === 'Escape' || e.keyCode === 27) && sidebar.classList.contains('is-open')) {
+    if ((e.key === 'Escape' || e.keyCode === 27) &&
+        sidebar && sidebar.classList.contains('is-open')) {
       closeSidebar();
     }
   });
 
-  /* ── Auto-dismiss de mensajes flash ── */
+  /* Limpiar en resize a desktop */
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 768 && sidebar) {
+      sidebar.classList.remove('is-open');
+      overlay.classList.remove('is-visible');
+      document.body.style.overflow = '';
+    }
+  }, { passive: true });
+
+  /* ════════════════════════════════════════
+     SEARCH — botón limpiar
+  ════════════════════════════════════════ */
+  if (searchInput && clearBtn) {
+    function syncClearBtn() {
+      if (searchInput.value.length > 0) {
+        clearBtn.classList.add('is-visible');
+      } else {
+        clearBtn.classList.remove('is-visible');
+      }
+    }
+    /* Estado inicial (al cargar con ?q= en la URL) */
+    syncClearBtn();
+    searchInput.addEventListener('input', syncClearBtn);
+
+    clearBtn.addEventListener('click', function () {
+      searchInput.value = '';
+      searchInput.focus();
+      syncClearBtn();
+    });
+  }
+
+  /* ════════════════════════════════════════
+     FLASH MESSAGES — auto-dismiss 4 s
+  ════════════════════════════════════════ */
   var flashes = document.querySelectorAll('.flash-msg');
   flashes.forEach(function (el) {
     setTimeout(function () {
       el.style.transition = 'opacity .4s ease, transform .4s ease';
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(10px)';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateY(8px)';
       setTimeout(function () { el.remove(); }, 400);
     }, 4000);
-  });
-
-  /* ── Limpiar búsqueda en topbar ── */
-  var searchInput = document.querySelector('.topbar-search-input');
-  var clearBtn    = document.querySelector('.topbar-search-clear');
-  if (clearBtn && searchInput) {
-    clearBtn.addEventListener('click', function () {
-      searchInput.value = '';
-      searchInput.focus();
-      /* Disparar evento input para que el estilo ":not(:placeholder-shown)" se actualice */
-      searchInput.dispatchEvent(new Event('input'));
-    });
-  }
-
-  /* ── Cerrar menú de usuario al hacer click fuera ── */
-  document.addEventListener('click', function (e) {
-    var userBtn = document.querySelector('.topbar-user');
-    if (userBtn && !userBtn.contains(e.target)) {
-      userBtn.blur();
-    }
   });
 
 })();

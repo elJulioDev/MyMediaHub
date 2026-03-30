@@ -1,111 +1,68 @@
 /* ══════════════════════════════════════════════════════════════════
-   SIDEBAR — MyMediaHub
-   Archivo dedicado al componente de navegación lateral.
-   Importar en cualquier plantilla que necesite el sidebar.
+   sidebar.css — MyMediaHub
+   Diseño original del sidebar: marca, upload, nav, storage widget.
+   En desktop vive dentro del flex layout de app.css (.body-layout).
+   En mobile es un drawer position:fixed.
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Tokens de diseño ────────────────────────────────────────────── */
 :root {
-    --sb-width:          256px;
-    --gp-sidebar-width:  var(--sb-width);  /* Compatibilidad con index.css */
-    --sb-bg:             #17181a;
-    --sb-border:         rgba(255, 255, 255, 0.06);
-    --sb-text-main:      #ffffff;
-    --sb-text-muted:     #9ba1ab;
-    --sb-text-faint:     #727883;
+    --sb-width:         256px;
+    --gp-sidebar-width: var(--sb-width); /* Compatibilidad */
+    --sb-bg:            #17181a;
+    --sb-border:        rgba(255, 255, 255, 0.06);
+    --sb-text-main:     #ffffff;
+    --sb-text-muted:    #9ba1ab;
+    --sb-text-faint:    #727883;
 
-    /* Acento principal — azul Google ajustado para fondo oscuro */
-    --sb-accent:         #699df4;
-    --sb-accent-bg:      rgba(105, 157, 244, 0.10);
-    --sb-accent-border:  rgba(105, 157, 244, 0.35);
+    /* Acento */
+    --sb-accent:        #699df4;
+    --sb-accent-bg:     rgba(105, 157, 244, 0.10);
+    --sb-accent-border: rgba(105, 157, 244, 0.35);
+    --sb-accent-glow:   rgba(105, 157, 244, 0.50);
 
     /* Hover neutro */
-    --sb-hover-bg:       rgba(255, 255, 255, 0.045);
+    --sb-hover-bg:      rgba(255, 255, 255, 0.045);
 
-    /* Storage colors */
-    --sb-storage-image:  #e05252;
-    --sb-storage-video:  #699df4;
-    --sb-storage-track:  rgba(255, 255, 255, 0.07);
+    /* Storage */
+    --sb-storage-image: #e05252;
+    --sb-storage-video: #699df4;
+    --sb-storage-track: rgba(255, 255, 255, 0.07);
 
     /* Misc */
-    --sb-radius-pill:    100px;
-    --sb-radius-sm:      8px;
-    --sb-radius-xs:      5px;
-    --sb-transition:     180ms cubic-bezier(0.4, 0, 0.2, 1);
+    --sb-radius-pill:   100px;
+    --sb-radius-sm:     8px;
+    --sb-transition:    180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Contenedor principal ─────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   CONTENEDOR PRINCIPAL
+   Desktop: flex-child dentro de .body-layout (no position:fixed).
+   Mobile: drawer position:fixed via @media abajo.
+   ════════════════════════════════════════════════════════════════════ */
 .sidebar {
     width: var(--sb-width);
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100dvh;
-    box-sizing: border-box;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     background: var(--sb-bg);
     border-right: 1px solid var(--sb-border);
-    z-index: 1000;
     overflow: hidden;
-
-    /* Sutil gradiente vertical para dar profundidad */
+    /* Gradiente sutil de profundidad */
     background-image: linear-gradient(
         180deg,
         rgba(255,255,255,0.015) 0%,
         transparent 30%
     );
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
 }
 
-/* ── Brand ────────────────────────────────────────────────────────── */
-.sidebar__brand {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 22px 20px 18px;
-    flex-shrink: 0;
-    -webkit-user-select: none;
-    user-select: none;
-}
-
-.sidebar__logo-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.08);
-    flex-shrink: 0;
-    transition: background var(--sb-transition);
-}
-
-.sidebar__logo-icon:hover {
-    background: rgba(255,255,255,0.10);
-}
-
-.sidebar__logo-icon img {
-    display: block;
-}
-
-.sidebar__brand-name {
-    font-family: 'Product Sans', 'Google Sans', 'Nunito', sans-serif;
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
-    color: var(--sb-text-main);
-
-    /* Gradiente sutil en el nombre */
-    background: linear-gradient(135deg, #e2e4e8 0%, #9da3af 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* ── Botón de subida ──────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   UPLOAD BUTTON (arriba del sidebar, debajo del hamburger en mobile)
+   ════════════════════════════════════════════════════════════════════ */
 .sidebar__upload-wrap {
-    padding: 4px 14px 16px;
+    padding: 16px 14px 12px;
     flex-shrink: 0;
 }
 
@@ -119,14 +76,17 @@
     text-decoration: none;
     background: linear-gradient(135deg, #3a6fdb 0%, #1e56c8 100%);
     box-shadow:
-        0 1px 2px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.12);
-    transition: filter var(--sb-transition), transform var(--sb-transition), box-shadow var(--sb-transition);
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition:
+        filter var(--sb-transition),
+        transform var(--sb-transition),
+        box-shadow var(--sb-transition);
     position: relative;
     overflow: hidden;
 }
 
-/* Efecto shimmer al hover */
+/* Shimmer al hover */
 .sidebar__upload-btn::before {
     content: '';
     position: absolute;
@@ -141,17 +101,10 @@
     transform: translateY(-1px);
     box-shadow:
         0 4px 14px rgba(59, 111, 219, 0.45),
-        inset 0 1px 0 rgba(255,255,255,0.15);
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
-
-.sidebar__upload-btn:hover::before {
-    opacity: 1;
-}
-
-.sidebar__upload-btn:active {
-    transform: translateY(0);
-    filter: brightness(1.0);
-}
+.sidebar__upload-btn:hover::before { opacity: 1; }
+.sidebar__upload-btn:active { transform: translateY(0); filter: brightness(1); }
 
 .sidebar__upload-icon {
     display: flex;
@@ -160,7 +113,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.18);
+    background: rgba(255, 255, 255, 0.18);
     flex-shrink: 0;
     font-size: 11px;
     color: #fff;
@@ -173,10 +126,27 @@
     letter-spacing: 0.1px;
 }
 
-/* ── Secciones y separador ────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   NAV — SCROLL WRAPPER
+   Ocupa el espacio flexible entre el upload y el storage.
+   ════════════════════════════════════════════════════════════════════ */
+.sidebar__nav-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.08) transparent;
+}
+.sidebar__nav-scroll::-webkit-scrollbar       { width: 3px; }
+.sidebar__nav-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar__nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   SECCIONES Y SEPARADOR
+   ════════════════════════════════════════════════════════════════════ */
 .sidebar__section {
     padding: 0 8px;
-    flex-shrink: 0;
 }
 
 .sidebar__section-title {
@@ -185,7 +155,7 @@
     letter-spacing: 0.9px;
     text-transform: uppercase;
     color: var(--sb-text-faint);
-    padding: 10px 12px 6px;
+    padding: 12px 12px 5px;
     margin: 0;
     -webkit-user-select: none;
     user-select: none;
@@ -193,12 +163,14 @@
 
 .sidebar__divider {
     height: 1px;
-    margin: 8px 20px;
+    margin: 6px 12px;
     background: var(--sb-border);
     flex-shrink: 0;
 }
 
-/* ── Items de navegación ──────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   NAV ITEMS
+   ════════════════════════════════════════════════════════════════════ */
 .sidebar__nav-item {
     display: flex;
     align-items: center;
@@ -212,34 +184,32 @@
     font-weight: 500;
     transition:
         background var(--sb-transition),
-        color var(--sb-transition);
+        color var(--sb-transition),
+        border-color var(--sb-transition);
     position: relative;
     cursor: pointer;
     margin-bottom: 2px;
+    border: 1px solid transparent;
 }
 
-/* Estado base: hover neutro */
+/* Hover — neutro */
 .sidebar__nav-item:hover:not(.is-active) {
     background: var(--sb-hover-bg);
     color: var(--sb-text-main);
+    text-decoration: none;
 }
+.sidebar__nav-item:hover:not(.is-active) .sidebar__nav-icon { color: var(--sb-text-main); }
 
-.sidebar__nav-item:hover:not(.is-active) .sidebar__nav-icon {
-    color: var(--sb-text-main);
-}
-
-/* Estado activo */
+/* Activo */
 .sidebar__nav-item.is-active {
     background: var(--sb-accent-bg);
     color: var(--sb-accent);
-    border: 1px solid var(--sb-accent-border);
+    border-color: var(--sb-accent-border);
+    font-weight: 600;
 }
+.sidebar__nav-item.is-active .sidebar__nav-icon { color: var(--sb-accent); }
 
-.sidebar__nav-item.is-active .sidebar__nav-icon {
-    color: var(--sb-accent);
-}
-
-/* Indicador lateral izquierdo para el ítem activo */
+/* Indicador lateral izquierdo */
 .sidebar__nav-item.is-active::before {
     content: '';
     position: absolute;
@@ -250,10 +220,17 @@
     height: 18px;
     background: var(--sb-accent);
     border-radius: 0 3px 3px 0;
-    box-shadow: 0 0 8px rgba(105, 157, 244, 0.5);
+    box-shadow: 0 0 8px var(--sb-accent-glow);
 }
 
-/* ── Icono del nav item ───────────────────────────────────────────── */
+/* Peligro (logout) */
+.sidebar__nav-item.is-danger { color: var(--red, #f28b82); border-color: transparent; background: none; }
+.sidebar__nav-item.is-danger:hover {
+    background: rgba(242,139,130,.10);
+    color: var(--red, #f28b82);
+}
+
+/* ── Icono ── */
 .sidebar__nav-icon {
     display: flex;
     align-items: center;
@@ -265,6 +242,7 @@
     transition: color var(--sb-transition);
 }
 
+/* ── Label ── */
 .sidebar__nav-label {
     flex: 1;
     white-space: nowrap;
@@ -272,7 +250,7 @@
     text-overflow: ellipsis;
 }
 
-/* ── Badge "Pronto" ───────────────────────────────────────────────── */
+/* ── Badge (ej: "Pronto") ── */
 .sidebar__nav-badge {
     font-size: 9.5px;
     font-weight: 700;
@@ -282,19 +260,28 @@
     line-height: 1.4;
     flex-shrink: 0;
 }
-
 .sidebar__nav-badge--soon {
     background: rgba(255, 255, 255, 0.06);
     color: var(--sb-text-faint);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sidebar__nav-badge--count {
+    background: var(--sb-accent-bg);
+    color: var(--sb-accent);
+    border: 1px solid var(--sb-accent-border);
+    font-family: var(--font-mono, monospace);
 }
 
-/* ── Widget de almacenamiento ─────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   STORAGE WIDGET (parte inferior)
+   ════════════════════════════════════════════════════════════════════ */
 .sidebar__storage {
-    margin-top: auto;
-    padding: 16px 16px 20px;
-    border-top: 1px solid var(--sb-border);
     flex-shrink: 0;
+    padding: 14px 16px 18px;
+    border-top: 1px solid var(--sb-border);
+    background: var(--sb-bg);
+    /* Sombra sutil para separar del contenido */
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
 }
 
 .sidebar__storage-header {
@@ -303,21 +290,16 @@
     gap: 8px;
     margin-bottom: 10px;
 }
-
-.sidebar__storage-cloud-icon {
-    font-size: 13px;
-    color: var(--sb-text-faint);
-}
-
+.sidebar__storage-cloud-icon { font-size: 13px; color: var(--sb-text-faint); }
 .sidebar__storage-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     color: var(--sb-text-faint);
 }
 
-/* Barra de progreso */
+/* Barra de progreso doble (imágenes + videos) */
 .sidebar__storage-bar {
     display: flex;
     width: 100%;
@@ -328,41 +310,36 @@
     margin-bottom: 10px;
     gap: 1px;
 }
-
 .sidebar__storage-bar-fill {
     height: 100%;
     transition: width 1s ease-in-out;
     border-radius: var(--sb-radius-pill);
 }
-
 .sidebar__storage-bar-fill--image {
     background: var(--sb-storage-image);
     box-shadow: 0 0 6px rgba(224, 82, 82, 0.5);
 }
-
 .sidebar__storage-bar-fill--video {
     background: var(--sb-storage-video);
     box-shadow: 0 0 6px rgba(105, 157, 244, 0.5);
 }
 
-/* Leyenda de colores */
+/* Leyenda */
 .sidebar__storage-legend {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-bottom: 10px;
+    flex-wrap: wrap;
 }
-
 .sidebar__storage-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
 }
-
 .sidebar__storage-dot--image { background: var(--sb-storage-image); }
 .sidebar__storage-dot--video { background: var(--sb-storage-video); }
-
 .sidebar__storage-legend-label {
     font-size: 11px;
     color: var(--sb-text-faint);
@@ -379,19 +356,13 @@
     margin-bottom: 4px;
     font-feature-settings: 'tnum';
 }
-
-.sidebar__storage-sep {
-    color: var(--sb-text-faint);
-    margin: 0 2px;
-}
-
+.sidebar__storage-sep   { color: var(--sb-text-faint); margin: 0 2px; }
 .sidebar__storage-percent {
     font-size: 11px;
     font-weight: 600;
     color: var(--sb-text-main);
     font-feature-settings: 'tnum';
 }
-
 .sidebar__storage-meta {
     font-size: 11px;
     color: var(--sb-text-faint);
@@ -400,114 +371,70 @@
     gap: 5px;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   RESPONSIVE — móvil  (reemplaza el bloque anterior @media)
-   ══════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   RESPONSIVE — MÓVIL (≤ 768 px)
+   El sidebar pasa a ser un drawer fuera del viewport.
+   ════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-
-    /* El sidebar pasa a ser un drawer fuera del viewport */
     .sidebar {
-        width: var(--sb-width);
-        max-width: 80vw;
+        /* Pasa a drawer: sale del flujo flex */
         position: fixed;
         top: 0;
         left: 0;
         height: 100dvh;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        background: var(--sb-bg);
-        border-right: 1px solid var(--sb-border);
-        
-        /* CORRECCIONES AQUÍ: */
-        z-index: 1200; /* Debe ser mayor al 1100 del backdrop */
-        overflow-y: auto; 
+        width: var(--sb-width);
+        max-width: 82vw;
+        z-index: 300;
+        /* Escondido por defecto */
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                    box-shadow 0.28s ease;
+        overflow-y: auto;
         overflow-x: hidden;
-        transform: translateX(-100%); /* Lo esconde fuera de la pantalla */
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave al abrir */
+        /* Padding superior para no tapar contenido con el botón X */
+        padding-top: 0;
     }
 
-    .sidebar::-webkit-scrollbar { width: 6px; }
-    .sidebar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; }
-
-    /* Estado abierto — añadido via JS al <nav> */
     .sidebar.is-open {
         transform: translateX(0);
-        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.65);
     }
 
-    /* Telón de fondo semitransparente */
-    .sidebar-backdrop {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.55);
-        z-index: 1100;
-        -webkit-user-select: none;
-        -webkit-backdrop-filter: blur(2px);
-        backdrop-filter: blur(2px);
-        user-select: none;
-        animation: fadeInBackdrop 220ms ease forwards;
-    }
+    /* Scrollbar en el drawer */
+    .sidebar::-webkit-scrollbar       { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
 
-    .sidebar-backdrop.is-visible {
-        display: block;
-    }
-
-    @keyframes fadeInBackdrop {
-        from { opacity: 0; }
-        to   { opacity: 1; }
-    }
-
-    /* Botón hamburguesa visible solo en móvil */
-    .sidebar-toggle-btn {
-        display: flex !important;
-    }
+    /* El upload-wrap necesita espacio arriba para el botón cerrar */
+    .sidebar__upload-wrap { padding-top: 56px; }
 }
 
-/* Ocultar el botón en desktop */
-.sidebar-toggle-btn {
+/* ════════════════════════════════════════════════════════════════════
+   BOTÓN CERRAR DRAWER (solo mobile, creado en base.html)
+   ════════════════════════════════════════════════════════════════════ */
+.sidebar__close-btn {
     display: none;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--sb-border);
     border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--gp-text-secondary, #babdbf);
-    font-size: 18px;
     cursor: pointer;
-    flex-shrink: 0;
-    transition: background 180ms ease, color 180ms ease;
+    color: var(--sb-text-muted);
+    padding: 0;
+    z-index: 10;
+    transition: background var(--sb-transition), color var(--sb-transition),
+                border-color var(--sb-transition);
 }
-
-.sidebar-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #fff;
+.sidebar__close-btn:hover {
+    background: rgba(242,139,130,.12);
+    border-color: rgba(242,139,130,.3);
+    color: #f28b82;
 }
-
-/* ══════════════════════════════════════════════════════════════════
-   COLAPSO DESKTOP — sidebar deslizable en todos los tamaños
-   ══════════════════════════════════════════════════════════════════ */
-
-/* Transición suave en desktop */
-.sidebar {
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Estado colapsado (desktop) */
-body.sidebar-is-collapsed .sidebar {
-    transform: translateX(-100%);
-}
-
-/* El main-content se expande al colapsar */
-body.sidebar-is-collapsed .main-content {
-    margin-left: 0;
-    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Asegura transición también en estado normal */
-.main-content {
-    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+@media (max-width: 768px) {
+    .sidebar__close-btn { display: flex; }
 }
