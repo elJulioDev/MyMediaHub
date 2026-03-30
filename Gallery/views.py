@@ -357,29 +357,39 @@ def eliminar_archivo(request):
 def ver_perfil(request):
     """
     Vista de perfil de usuario.
-    Muestra datos del usuario, claves de API y almacenamiento detallado.
+    Muestra datos del usuario, estado de conexión ImageKit,
+    almacenamiento detallado con datos para anillo SVG,
+    y credenciales de API.
     """
-    # 1. Calculamos almacenamiento (reutilizando lógica de index)
-    media_files = MediaFile.objects.all()
+    # 1. Almacenamiento
     total_bytes = MediaFile.objects.aggregate(Sum('tamano'))['tamano__sum'] or 0
     image_bytes = MediaFile.objects.filter(tipo__in=['imagen', 'gif']).aggregate(Sum('tamano'))['tamano__sum'] or 0
     video_bytes = MediaFile.objects.filter(tipo='video').aggregate(Sum('tamano'))['tamano__sum'] or 0
 
     limit_gb = 20
     limit_bytes = limit_gb * (1024**3)
+    free_bytes = max(0, limit_bytes - total_bytes)
     
     percent_total = (total_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
     percent_image = (image_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
     percent_video = (video_bytes / limit_bytes) * 100 if limit_bytes > 0 else 0
 
+    # Datos para el anillo SVG (circunferencia = 2 * π * 40 ≈ 251.3)
+    CIRCUMFERENCE = 251.3
+    image_dash = round((percent_image / 100) * CIRCUMFERENCE, 2)
+    video_dash = round((percent_video / 100) * CIRCUMFERENCE, 2)
+
     def format_bytes(size):
         power = 2**10
         n = 0
-        power_labels = {0 : '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
+        power_labels = {0: '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
         while size > power:
             size /= power
             n += 1
         return f"{size:.2f} {power_labels[n]}"
+
+    file_count = MediaFile.objects.count()
+    album_count = Album.objects.count()
 
     storage_data = {
         'used_str': format_bytes(total_bytes),
@@ -389,22 +399,42 @@ def ver_perfil(request):
         'percent_video': percent_video,
         'image_str': format_bytes(image_bytes),
         'video_str': format_bytes(video_bytes),
-        'file_count': media_files.count()
+        'free_str': format_bytes(free_bytes),
+        'file_count': file_count,
+        'album_count': album_count,
+        # Datos para el anillo SVG
+        'image_dash': image_dash,
+        'video_dash': video_dash,
     }
 
-    # 2. Preparamos contexto con API Keys (Ocultamos parte de la privada por seguridad visual)
+    # 2. Verificar conexión con ImageKit (ping rápido a la API)
+    ik_connected = False
+    try:
+        auth = HTTPBasicAuth(settings.IMAGEKIT_PRIVATE_KEY, '')
+        response = requests.get(
+            "https://api.imagekit.io/v1/files",
+            params={"limit": 1},
+            auth=auth,
+            timeout=5
+        )
+        ik_connected = response.status_code == 200
+    except Exception:
+        ik_connected = False
+
+    # 3. API Keys (ocultamos parte de la privada)
     private_key = getattr(settings, 'IMAGEKIT_PRIVATE_KEY', '')
     masked_key = f"{private_key[:10]}...{private_key[-5:]}" if private_key else "No configurada"
 
     context = {
         'title': 'Mi Perfil',
-        'active_tab': 'perfil', # Para marcar activo en sidebar si quieres agregarlo
+        'active_tab': 'perfil',
         'storage': storage_data,
+        'ik_connected': ik_connected,
         'api_conf': {
             'public_key': getattr(settings, 'IMAGEKIT_PUBLIC_KEY', 'No configurada'),
             'url_endpoint': getattr(settings, 'IMAGEKIT_URL_ENDPOINT', 'No configurada'),
-            'private_key_full': private_key, # Para copiar/pegar
-            'private_key_masked': masked_key
+            'private_key_full': private_key,
+            'private_key_masked': masked_key,
         }
     }
     return render(request, 'perfil.html', context)

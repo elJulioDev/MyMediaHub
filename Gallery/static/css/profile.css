@@ -1,132 +1,560 @@
-/* --- BLOQUEO DE SCROLL (Solo para Perfil) --- */
+/* ══════════════════════════════════════════════════════════════════
+   PROFILE — MyMediaHub
+   Vista de perfil / cuenta.  Mobile-first, integrado con sidebar.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── CORRECCIÓN CRÍTICA: permitir scroll en móvil ─────────────── */
 body {
-    overflow: hidden; /* Elimina la barra de desplazamiento de la ventana */
-    height: 100vh;    /* Fuerza la altura exacta de la pantalla */
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
 }
 
 .main-content {
-    height: 100vh;    /* El contenedor principal ocupa toda la altura */
-    overflow: hidden; /* Asegura que no haya scroll interno */
-    
-    /* Centrado Vertical: Esto hará que tu perfil quede perfectamente en el medio */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; 
+    height: auto;
+    overflow: visible;
+    display: block;
 }
 
-/* --- AJUSTE DE WRAPPER --- */
+/* ── Wrapper principal ────────────────────────────────────────── */
 .profile-wrapper {
-    /* Mantenemos el ancho que definimos antes */
-    max-width: 960px;
+    max-width: 760px;
     margin: 0 auto;
-    width: 100%;
-    
-    /* Quitamos padding vertical excesivo para evitar desbordes */
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 12px 16px 60px;
 }
 
-.profile-wrapper {
-    max-width: 720px; /* Ancho máximo estilo Google Account */
-    margin: 0 auto;   /* Centrado */
-    padding-top: 40px;
-    padding-bottom: 60px;
+/* ── Encabezado de página ─────────────────────────────────────── */
+.profile-header-compact {
+    margin-bottom: 28px;
 }
 
-/* --- TARJETAS GOOGLE STYLE (Redefinidas para ser más sutiles) --- */
+.profile-header-compact h2 {
+    font-family: 'Product Sans', 'Google Sans', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--gp-text-main, #e8eaed);
+    margin-bottom: 2px;
+}
+
+.profile-header-compact p {
+    color: var(--gp-text-secondary, #9aa0a6);
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+/* ── Tarjetas Google-style ────────────────────────────────────── */
 .gp-card {
-    background-color: var(--gp-sidebar-bg, #1E1F20);
-    border: 1px solid var(--gp-border, #3c4043);
-    border-radius: 8px;
-    /* Sin sombras pesadas por defecto, solo al hover suave */
-    transition: border-color 0.2s;
+    background-color: #1e1f20;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: border-color 0.2s ease;
 }
 
 .gp-card:hover {
-    border-color: #5f6368;
+    border-color: rgba(255, 255, 255, 0.14);
 }
 
 .card-header-gp {
-    border-bottom: 1px solid var(--gp-border, #3c4043);
-    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* --- AVATAR COMPACTO --- */
-.avatar-compact {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #4285F4, #34A853);
-    color: white;
-    font-size: 1.8rem;
-    font-weight: 500;
+.card-header-gp h6 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gp-text-main, #e8eaed);
+    margin: 0;
+}
+
+.card-header-gp .header-icon {
+    color: var(--sb-accent, #699df4);
+    font-size: 14px;
+}
+
+/* ── Avatar ───────────────────────────────────────────────────── */
+.avatar-profile {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #3a6fdb 0%, #1a8cff 50%, #34a853 100%);
+    color: #fff;
+    font-size: 1.75rem;
+    font-weight: 600;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+    box-shadow:
+        0 0 0 3px rgba(58, 111, 219, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+    font-family: 'Product Sans', 'Google Sans', sans-serif;
 }
 
-/* --- ICONOS CUADRADOS (Estadísticas) --- */
-.icon-sq {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+/* ── Tarjeta de identidad (usuario) ───────────────────────────── */
+.identity-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+}
+
+.identity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.identity-info h4 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.identity-info .identity-email {
+    color: var(--gp-text-secondary, #9aa0a6);
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+}
+
+.identity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(52, 168, 83, 0.12);
+    color: #81c995;
+    border: 1px solid rgba(52, 168, 83, 0.25);
+}
+
+/* ── Métricas (grid de stats) ─────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
+    border-radius: 12px;
+    background: #1e1f20;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 15px;
+    margin-bottom: 8px;
 }
 
-.bg-soft-blue { background-color: rgba(66, 133, 244, 0.15); }
-.text-blue { color: #8ab4f8; }
+.stat-icon--cloud  { background: rgba(105, 157, 244, 0.12); color: #699df4; }
+.stat-icon--files  { background: rgba(224, 82, 82, 0.12);   color: #e05252; }
+.stat-icon--albums { background: rgba(52, 168, 83, 0.12);   color: #81c995; }
 
-.bg-soft-red { background-color: rgba(234, 67, 53, 0.15); }
-.text-red { color: #ea4335; }
-
-/* --- FORMULARIOS DARK --- */
-.form-control.bg-dark {
-    background-color: #131314 !important; /* Fondo del body para contraste */
-    border-color: var(--gp-border, #3c4043);
-    color: #e8eaed !important;
-    font-size: 0.85rem; /* Texto técnico un poco más pequeño */
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    font-feature-settings: 'tnum';
+    line-height: 1.2;
 }
 
-.form-control.bg-dark:focus {
-    border-color: var(--gp-blue, #8ab4f8);
-    box-shadow: none; /* Google style es flat */
+.stat-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--sb-text-faint, #727883);
+    margin-top: 2px;
 }
 
-.input-group-text.bg-dark {
-    background-color: #1E1F20 !important;
-    border-color: var(--gp-border, #3c4043);
+/* ── Almacenamiento detallado ─────────────────────────────────── */
+.storage-detail-card .storage-visual {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
 }
 
-.btn-outline-secondary {
-    border-color: var(--gp-border, #3c4043);
-    color: var(--gp-text-secondary);
+.storage-ring-wrap {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
 }
 
-.btn-outline-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: #5f6368;
-    color: #e8eaed;
+.storage-ring-wrap svg {
+    transform: rotate(-90deg);
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-    .profile-wrapper {
-        padding-top: 20px;
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    
-    .d-flex.align-items-center.p-4 {
+.storage-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.storage-ring-percent {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    font-feature-settings: 'tnum';
+}
+
+.storage-ring-label {
+    font-size: 0.6rem;
+    color: var(--sb-text-faint, #727883);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.storage-breakdown {
+    flex: 1;
+}
+
+.storage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.storage-row:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.storage-row-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.storage-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.storage-dot--image { background: #e05252; }
+.storage-dot--video { background: #699df4; }
+.storage-dot--free  { background: rgba(255, 255, 255, 0.1); }
+
+.storage-row-type {
+    font-size: 0.82rem;
+    color: var(--gp-text-secondary, #9aa0a6);
+}
+
+.storage-row-value {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    font-feature-settings: 'tnum';
+}
+
+/* ── Sección ImageKit ─────────────────────────────────────────── */
+.ik-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ik-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ik-status-dot--ok    { background: #34a853; box-shadow: 0 0 6px rgba(52, 168, 83, 0.5); }
+.ik-status-dot--error { background: #ea4335; box-shadow: 0 0 6px rgba(234, 67, 53, 0.5); }
+
+.ik-status-text {
+    font-size: 0.82rem;
+    color: var(--gp-text-secondary, #9aa0a6);
+    flex: 1;
+}
+
+.ik-status-text strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ── Credenciales / campos de input ───────────────────────────── */
+.credential-group {
+    padding: 12px 24px;
+}
+
+.credential-group:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.credential-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--sb-text-faint, #727883);
+    margin-bottom: 6px;
+}
+
+.credential-input-wrap {
+    display: flex;
+    align-items: stretch;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #131314;
+    transition: border-color 0.2s;
+}
+
+.credential-input-wrap:focus-within {
+    border-color: rgba(105, 157, 244, 0.4);
+}
+
+.credential-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--gp-text-main, #e8eaed);
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 0.78rem;
+    padding: 10px 12px;
+    outline: none;
+    min-width: 0;
+}
+
+.credential-input-wrap input::placeholder {
+    color: var(--sb-text-faint, #727883);
+}
+
+.credential-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    flex-shrink: 0;
+    border: none;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--gp-text-secondary, #9aa0a6);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-size: 13px;
+}
+
+.credential-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.credential-btn + .credential-btn {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Sección "Próximamente" ───────────────────────────────────── */
+.future-section {
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.future-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(105, 157, 244, 0.08);
+    border: 1px solid rgba(105, 157, 244, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 20px;
+    color: #699df4;
+}
+
+.future-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.future-desc {
+    font-size: 0.78rem;
+    color: var(--sb-text-faint, #727883);
+    max-width: 340px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* ── Sección de acciones rápidas ──────────────────────────────── */
+.quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 20px 24px;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--gp-text-secondary, #9aa0a6);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.quick-action-btn i {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    color: var(--sb-accent, #699df4);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Tablets */
+@media (max-width: 900px) {
+    .storage-detail-card .storage-visual {
         flex-direction: column;
+        align-items: stretch;
         text-align: center;
     }
-    
-    .avatar-compact {
-        margin-right: 0 !important;
-        margin-bottom: 15px;
+
+    .storage-ring-wrap {
+        margin: 0 auto;
+    }
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .profile-wrapper {
+        padding: 8px 12px 40px;
+    }
+
+    .profile-header-compact {
+        margin-bottom: 20px;
+    }
+
+    .profile-header-compact h2 {
+        font-size: 1.35rem;
+    }
+
+    /* Avatar + info en columna */
+    .identity-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 14px;
+        padding: 20px 16px;
+    }
+
+    .identity-info h4 {
+        font-size: 1.05rem;
+    }
+
+    /* Stats a 3 columnas pero más compacto */
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px 6px;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
+    }
+
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+
+    /* Credenciales más compactas */
+    .credential-group {
+        padding: 10px 16px;
+    }
+
+    .credential-input-wrap input {
+        font-size: 0.72rem;
+        padding: 8px 10px;
+    }
+
+    /* Acciones a 1 columna */
+    .quick-actions {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+
+    /* Storage visual */
+    .storage-detail-card .storage-visual {
+        padding: 16px;
+    }
+
+    .storage-ring-wrap {
+        width: 80px;
+        height: 80px;
+    }
+
+    /* IK status */
+    .ik-status-row {
+        padding: 12px 16px;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-card:last-child {
+        grid-column: 1 / -1;
     }
 }

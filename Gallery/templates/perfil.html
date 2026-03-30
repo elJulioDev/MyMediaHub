@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mi Perfil</title>
+    <title>Mi Perfil — MyMediaHub</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
     <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
@@ -19,14 +19,11 @@
 
 <div class="app-container">
 
-    {# ═══════════════════════════════════════════════════════════ #}
-    {# SIDEBAR — componente reutilizable                          #}
-    {# active_tab='perfil' para marcar el ítem activo            #}
-    {# ═══════════════════════════════════════════════════════════ #}
     {% include 'partials/_sidebar.html' %}
 
     <main class="main-content">
-        <!-- Hamburguesa móvil para perfil -->
+
+        {# ── Hamburguesa móvil ──────────────────────────────────── #}
         <div class="d-flex align-items-center pt-3 pb-1 d-md-none px-2">
             <button class="sidebar-toggle-btn" id="sidebarToggleBtn"
                     aria-label="Abrir menú" aria-expanded="false"
@@ -34,130 +31,284 @@
                 <i class="fas fa-bars"></i>
             </button>
         </div>
+
         <div class="profile-wrapper">
-            <div class="profile-header-compact mb-4">
-                <h2 class="text-white fw-normal" style="font-family: 'Product Sans', sans-serif;">Cuenta</h2>
-                <p class="text-secondary small">Gestiona tu información, privacidad y seguridad.</p>
+
+            {# ═══════ ENCABEZADO ═══════ #}
+            <div class="profile-header-compact">
+                <h2>Cuenta</h2>
+                <p>Gestiona tu información, almacenamiento y configuración de API.</p>
             </div>
 
-            <div class="gp-card p-0 mb-4 overflow-hidden">
-                <div class="d-flex align-items-center p-4">
-                    <div class="avatar-compact me-4">
+            {# ═══════ TARJETA DE IDENTIDAD ═══════ #}
+            <div class="gp-card mb-3">
+                <div class="identity-card">
+                    <div class="avatar-profile">
                         {{ request.user.username|first|upper }}
                     </div>
-                    <div class="flex-grow-1">
-                        <h4 class="mb-1 text-white" style="font-size: 1.25rem;">{{ request.user.first_name }} {{ request.user.last_name }}</h4>
-                        <p class="text-secondary mb-0 small">{{ request.user.email }}</p>
-                        <span class="badge bg-dark border border-secondary text-secondary mt-2 rounded-pill fw-normal"
-                              style="font-size: 0.75rem;">Administrador</span>
+                    <div class="identity-info">
+                        <h4>
+                            {% if request.user.first_name %}
+                                {{ request.user.first_name }} {{ request.user.last_name }}
+                            {% else %}
+                                {{ request.user.username }}
+                            {% endif %}
+                        </h4>
+                        <p class="identity-email mb-0">
+                            {% if request.user.email %}
+                                {{ request.user.email }}
+                            {% else %}
+                                Sin correo configurado
+                            {% endif %}
+                        </p>
+                        {% if request.user.is_staff %}
+                            <span class="identity-badge mt-1">
+                                <i class="fas fa-shield-alt" style="font-size: 9px;"></i>
+                                Administrador
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <div class="gp-card p-3 h-100 d-flex align-items-center">
-                        <div class="icon-sq bg-soft-blue text-blue me-3">
-                            <i class="fas fa-cloud"></i>
-                        </div>
-                        <div>
-                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.7rem;">Uso de Nube</div>
-                            <div class="text-white fw-bold">{{ storage.percent|floatformat:1 }}%</div>
-                        </div>
+            {# ═══════ MÉTRICAS RÁPIDAS ═══════ #}
+            <div class="stats-grid mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon--cloud">
+                        <i class="fas fa-cloud"></i>
                     </div>
+                    <span class="stat-value">{{ storage.percent|floatformat:1 }}%</span>
+                    <span class="stat-label">Uso nube</span>
                 </div>
-                <div class="col-md-6">
-                    <div class="gp-card p-3 h-100 d-flex align-items-center">
-                        <div class="icon-sq bg-soft-red text-red me-3">
-                            <i class="fas fa-photo-video"></i>
-                        </div>
-                        <div>
-                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.7rem;">Archivos</div>
-                            <div class="text-white fw-bold">{{ storage.file_count }} items</div>
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon--files">
+                        <i class="fas fa-photo-video"></i>
                     </div>
+                    <span class="stat-value">{{ storage.file_count }}</span>
+                    <span class="stat-label">Archivos</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon--albums">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <span class="stat-value">{{ storage.album_count|default:"0" }}</span>
+                    <span class="stat-label">Álbumes</span>
                 </div>
             </div>
 
-            <div class="gp-card">
+            {# ═══════ ALMACENAMIENTO DETALLADO ═══════ #}
+            <div class="gp-card storage-detail-card mb-3">
                 <div class="card-header-gp py-3 px-4">
-                    <h6 class="mb-0 text-white" style="font-size: 0.95rem;">Credenciales de Desarrollo</h6>
+                    <i class="fas fa-database header-icon"></i>
+                    <h6>Almacenamiento</h6>
                 </div>
-                <div class="card-body-gp p-4">
 
-                    <div class="row mb-3 align-items-center">
-                        <div class="col-md-3">
-                            <label class="text-secondary small">Endpoint URL</label>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="input-group input-group-sm">
-                                <input type="text"
-                                       class="form-control bg-dark border-secondary text-white font-monospace"
-                                       value="{{ api_conf.url_endpoint }}" readonly>
-                            </div>
+                <div class="storage-visual">
+                    {# Anillo SVG #}
+                    <div class="storage-ring-wrap">
+                        <svg viewBox="0 0 100 100" width="100%" height="100%">
+                            {# Track de fondo #}
+                            <circle cx="50" cy="50" r="40"
+                                    fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                            {# Segmento: imágenes #}
+                            <circle cx="50" cy="50" r="40"
+                                    fill="none"
+                                    stroke="#e05252"
+                                    stroke-width="8"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="{{ storage.image_dash|unlocalize }} 251.3"
+                                    stroke-dashoffset="0"
+                                    class="ring-segment"
+                                    style="filter: drop-shadow(0 0 3px rgba(224,82,82,0.4));"/>
+                            
+                            {# Segmento: videos #}
+                            <circle cx="50" cy="50" r="40"
+                                    fill="none"
+                                    stroke="#699df4"
+                                    stroke-width="8"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="{{ storage.video_dash|unlocalize }} 251.3"
+                                    stroke-dashoffset="-{{ storage.image_dash|unlocalize }}"
+                                    class="ring-segment"
+                                    style="filter: drop-shadow(0 0 3px rgba(105,157,244,0.4));"/>
+                        </svg>
+                        <div class="storage-ring-center">
+                            <span class="storage-ring-percent">{{ storage.percent|floatformat:0 }}%</span>
+                            <span class="storage-ring-label">Usado</span>
                         </div>
                     </div>
 
-                    <div class="row mb-3 align-items-center">
-                        <div class="col-md-3">
-                            <label class="text-secondary small">Public Key</label>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="input-group input-group-sm">
-                                <input type="text"
-                                       class="form-control bg-dark border-secondary text-white font-monospace"
-                                       value="{{ api_conf.public_key }}" readonly>
+                    {# Desglose #}
+                    <div class="storage-breakdown">
+                        <div class="storage-row">
+                            <div class="storage-row-left">
+                                <span class="storage-dot storage-dot--image"></span>
+                                <span class="storage-row-type">Imágenes</span>
                             </div>
+                            <span class="storage-row-value">{{ storage.image_str }}</span>
+                        </div>
+                        <div class="storage-row">
+                            <div class="storage-row-left">
+                                <span class="storage-dot storage-dot--video"></span>
+                                <span class="storage-row-type">Videos</span>
+                            </div>
+                            <span class="storage-row-value">{{ storage.video_str }}</span>
+                        </div>
+                        <div class="storage-row">
+                            <div class="storage-row-left">
+                                <span class="storage-dot storage-dot--free"></span>
+                                <span class="storage-row-type">Disponible</span>
+                            </div>
+                            <span class="storage-row-value">{{ storage.free_str }}</span>
+                        </div>
+                        <div class="storage-row" style="border: none; padding-top: 8px;">
+                            <div class="storage-row-left">
+                                <span class="storage-row-type" style="font-weight: 600; color: #fff;">Total</span>
+                            </div>
+                            <span class="storage-row-value">{{ storage.used_str }} / {{ storage.limit_str }}</span>
                         </div>
                     </div>
-
-                    <div class="row align-items-center">
-                        <div class="col-md-3">
-                            <label class="text-secondary small">Private Key</label>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="input-group input-group-sm">
-                                <input type="password" id="privateKeyInput"
-                                       class="form-control bg-dark border-secondary text-white font-monospace"
-                                       value="{{ api_conf.private_key_full }}" readonly>
-                                <button class="btn btn-outline-secondary" type="button" onclick="toggleKey(this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary" type="button" onclick="copyKey()">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
-        </div>
+
+            {# ═══════ IMAGEKIT — ESTADO Y CREDENCIALES ═══════ #}
+            <div class="gp-card mb-3">
+                <div class="card-header-gp py-3 px-4">
+                    <i class="fas fa-plug header-icon"></i>
+                    <h6>ImageKit.io</h6>
+                </div>
+
+                {# Estado de conexión #}
+                <div class="ik-status-row">
+                    {% if ik_connected %}
+                        <span class="ik-status-dot ik-status-dot--ok"></span>
+                        <span class="ik-status-text">
+                            Conexión <strong>activa</strong> — API respondiendo correctamente
+                        </span>
+                    {% else %}
+                        <span class="ik-status-dot ik-status-dot--error"></span>
+                        <span class="ik-status-text">
+                            <strong>Sin conexión</strong> — Verifica tus credenciales
+                        </span>
+                    {% endif %}
+                </div>
+
+                {# Credenciales #}
+                <div class="credential-group">
+                    <div class="credential-label">URL Endpoint</div>
+                    <div class="credential-input-wrap">
+                        <input type="text" value="{{ api_conf.url_endpoint }}" readonly>
+                        <button class="credential-btn" type="button"
+                                onclick="copyToClipboard(this, '{{ api_conf.url_endpoint }}')" title="Copiar">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="credential-group">
+                    <div class="credential-label">Public Key</div>
+                    <div class="credential-input-wrap">
+                        <input type="text" value="{{ api_conf.public_key }}" readonly>
+                        <button class="credential-btn" type="button"
+                                onclick="copyToClipboard(this, '{{ api_conf.public_key }}')" title="Copiar">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="credential-group">
+                    <div class="credential-label">Private Key</div>
+                    <div class="credential-input-wrap">
+                        <input type="password" id="privateKeyInput"
+                               value="{{ api_conf.private_key_full }}" readonly>
+                        <button class="credential-btn" type="button" onclick="toggleKey()" title="Mostrar/Ocultar">
+                            <i class="fas fa-eye" id="toggleKeyIcon"></i>
+                        </button>
+                        <button class="credential-btn" type="button"
+                                onclick="copyToClipboard(this, '{{ api_conf.private_key_full }}')" title="Copiar">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {# Acciones rápidas #}
+                <div class="quick-actions">
+                    <a href="{% url 'sincronizar' %}" class="quick-action-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Sincronizar nube</span>
+                    </a>
+                    <a href="/admin/Gallery/mediafile/add/" class="quick-action-btn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Subir archivos</span>
+                    </a>
+                    <a href="/admin/" class="quick-action-btn">
+                        <i class="fas fa-cog"></i>
+                        <span>Panel Admin</span>
+                    </a>
+                    <a href="{% url 'lista_albumes' %}" class="quick-action-btn">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Ver álbumes</span>
+                    </a>
+                </div>
+            </div>
+
+            {# ═══════ PRÓXIMAMENTE: SISTEMA DE CUENTAS ═══════ #}
+            <div class="gp-card">
+                <div class="future-section">
+                    <div class="future-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="future-title">Sistema de Cuentas</div>
+                    <p class="future-desc">
+                        Próximamente podrás invitar usuarios, gestionar permisos
+                        y compartir álbumes de forma privada con tu equipo o familia.
+                    </p>
+                </div>
+            </div>
+
+        </div>{# /profile-wrapper #}
     </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function toggleKey(btn) {
+    function toggleKey() {
         const input = document.getElementById('privateKeyInput');
-        const icon = btn.querySelector('i');
-        if (input.type === "password") {
-            input.type = "text";
+        const icon = document.getElementById('toggleKeyIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
             icon.classList.replace('fa-eye', 'fa-eye-slash');
         } else {
-            input.type = "password";
+            input.type = 'password';
             icon.classList.replace('fa-eye-slash', 'fa-eye');
         }
     }
 
-    function copyKey() {
-        const input = document.getElementById('privateKeyInput');
-        navigator.clipboard.writeText(input.value);
-        const btn = event.currentTarget;
-        const originalIcon = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check text-success"></i>';
-        setTimeout(() => btn.innerHTML = originalIcon, 2000);
+    function copyToClipboard(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const icon = btn.querySelector('i');
+            const original = icon.className;
+            icon.className = 'fas fa-check';
+            icon.style.color = '#34a853';
+            setTimeout(() => {
+                icon.className = original;
+                icon.style.color = '';
+            }, 1800);
+        });
     }
+
+    // Animar los segmentos del anillo al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+        const segments = document.querySelectorAll('.ring-segment');
+        segments.forEach((seg, i) => {
+            const dash = seg.getAttribute('stroke-dasharray');
+            seg.setAttribute('stroke-dasharray', '0 251.3');
+            setTimeout(() => {
+                seg.style.transition = 'stroke-dasharray 1s cubic-bezier(0.4, 0, 0.2, 1)';
+                seg.setAttribute('stroke-dasharray', dash);
+            }, 200 + i * 300);
+        });
+    });
 </script>
 </body>
 </html>
