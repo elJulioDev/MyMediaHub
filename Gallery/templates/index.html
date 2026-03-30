@@ -1,30 +1,19 @@
-{% load static %}
-{% load l10n %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/index.css' %}">
-    <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
-    <link rel="stylesheet" href="{% static 'css/topbar.css' %}">
-    <link rel="icon" type="image/svg+xml" href="{% static 'img/icon.svg' %}">
+{# Gallery/templates/index.html #}
+{% extends 'Gallery/base.html' %}
+{% load static l10n %}
 
+{% block title %}{{ title|default:"Inicio - MyMediaHub" }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
 <style>
     /* --- OPTIMIZACIÓN EXTREMA DE UI (MODO GAMING) --- */
-
-    /* 1. Aislar el contenedor del GIF para que no afecte a los botones */
     #modalContent {
         contain: strict;
         transform: translateZ(0);
     }
-
-    /* 2. Blindar los controles (Flechas y Botones Superiores) */
     #prevBtn, #nextBtn,
     .modal-top-bar button,
     .gp-dropdown-menu {
@@ -34,28 +23,21 @@
         will-change: transform, opacity;
         contain: layout style;
     }
-
-    /* 3. Flechas de Navegación Optimizadas */
     .nav-arrow {
         transition: transform 0.1s ease !important;
         opacity: 0.6 !important;
     }
-
     .nav-arrow:hover {
         opacity: 1 !important;
         transform: scale(1.1) translateZ(0) !important;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
-
-    /* 4. Menú Dropdown Acelerado */
     .gp-dropdown-menu {
         box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
         border: 1px solid rgba(255,255,255,0.1);
         backdrop-filter: none !important;
         background-color: #202124 !important;
     }
-
-    /* 5. Contenedor de botones superiores */
     .modal-top-bar {
         position: absolute;
         top: 0;
@@ -67,133 +49,100 @@
         z-index: 2002;
         pointer-events: none;
     }
-
     .modal-top-bar > * {
         pointer-events: auto;
     }
 </style>
-</head>
-<body>
+{% endblock %}
 
+{% block content %}
 <form id="csrf-form">
     {% csrf_token %}
 </form>
 
-<div class="app-container">
-    {% include 'partials/_sidebar.html' %}
-    {% include 'partials/_topbar.html' %}
+{% regroup media_files by creado_en|date:"F Y" as media_by_month %}
 
-    <main class="main-content">
-
-        {% if messages %}
-            <div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-lg" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        {% regroup media_files by creado_en|date:"F Y" as media_by_month %}
-
-        {% for month in media_by_month %}
-            <div class="timeline-group fade-in-up">
-
-                <div class="date-header">
-                    <span>{{ month.grouper|capfirst }}</span>
-                </div>
-
-                <div class="photo-grid">
-                    {% for media in month.list %}
-                        <div class="photo-item open-media" data-full-url="{{ media.archivo.url }}" data-id="{{ media.id }}">
-
-                            <img
-                                src="{{ media.thumbnail_base64|default:media.miniatura_url }}"
-                               {% if media.thumbnail_base64 %}data-src="{{ media.miniatura_url }}"{% endif %}
-                               alt="Media"
-                               class="{% if media.thumbnail_base64 %}blur-up{% endif %}"
-                               decoding="async"
-                            >
-
-                            {% if media.is_video %}
-                                <div class="position-absolute top-0 end-0 m-2 text-white" style="text-shadow: 0 1px 2px black;">
-                                    <i class="fas fa-play-circle fs-5"></i>
-                                </div>
-                            {% endif %}
-
-                            {% if media.is_webp %}
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
-                                </div>
-                            {% elif media.is_gif %}
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% empty %}
-            <div class="empty-state">
-                <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 64px; color: #5f6368;"></i>
-                <h4 style="color: #e8eaed;">Tu galería está vacía</h4>
-                <p style="color: #9aa0a6;">Sube fotos o dale a "Sincronizar" si ya tienes archivos en ImageKit.</p>
-                <a href="/admin/Gallery/mediafile/add/" class="btn btn-primary rounded-pill px-4 mt-3">Subir ahora</a>
-            </div>
-        {% endfor %}
-
-        {% if page_obj.has_other_pages %}
-        <div class="d-flex justify-content-center my-4 gap-2">
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
-                   class="btn btn-outline-secondary rounded-pill px-4"
-                   style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
-                    <i class="fas fa-chevron-left"></i> Anterior
-                </a>
-            {% endif %}
-
-            <span class="align-self-center" style="color: var(--gp-text-secondary); font-size: 14px;">
-                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
-                   class="btn btn-outline-secondary rounded-pill px-4"
-                   style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
-                    Siguiente <i class="fas fa-chevron-right"></i>
-                </a>
-            {% endif %}
+{% for month in media_by_month %}
+    <div class="timeline-group fade-in-up">
+        <div class="date-header">
+            <span>{{ month.grouper|capfirst }}</span>
         </div>
-        {% endif %}
 
-    </main>
+        <div class="photo-grid">
+            {% for media in month.list %}
+                <div class="photo-item open-media" data-full-url="{{ media.archivo.url }}" data-id="{{ media.id }}">
+                    <img
+                        src="{{ media.thumbnail_base64|default:media.miniatura_url }}"
+                       {% if media.thumbnail_base64 %}data-src="{{ media.miniatura_url }}"{% endif %}
+                       alt="Media"
+                       class="{% if media.thumbnail_base64 %}blur-up{% endif %}"
+                       decoding="async"
+                    >
+
+                    {% if media.is_video %}
+                        <div class="position-absolute top-0 end-0 m-2 text-white" style="text-shadow: 0 1px 2px black;">
+                            <i class="fas fa-play-circle fs-5"></i>
+                        </div>
+                    {% endif %}
+
+                    {% if media.is_webp or media.is_gif %}
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-dark border border-secondary" style="font-size: 9px;">GIF</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% empty %}
+    <div class="empty-state">
+        <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 64px; color: #5f6368;"></i>
+        <h4 style="color: #e8eaed;">Tu galería está vacía</h4>
+        <p style="color: #9aa0a6;">Sube fotos o dale a "Sincronizar" si ya tienes archivos en ImageKit.</p>
+        <a href="/admin/Gallery/mediafile/add/" class="btn btn-primary rounded-pill px-4 mt-3">Subir ahora</a>
+    </div>
+{% endfor %}
+
+{% if page_obj.has_other_pages %}
+<div class="d-flex justify-content-center my-4 gap-2">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+           class="btn btn-outline-secondary rounded-pill px-4"
+           style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
+            <i class="fas fa-chevron-left"></i> Anterior
+        </a>
+    {% endif %}
+
+    <span class="align-self-center" style="color: var(--gp-text-secondary); font-size: 14px;">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+           class="btn btn-outline-secondary rounded-pill px-4"
+           style="border-color: var(--gp-border); color: var(--gp-text-secondary);">
+            Siguiente <i class="fas fa-chevron-right"></i>
+        </a>
+    {% endif %}
 </div>
+{% endif %}
 
 {# ═══════════════════════════════════════════════════════════ #}
 {# MODAL VISOR DE MEDIA                                        #}
 {# ═══════════════════════════════════════════════════════════ #}
 <div id="modal" class="d-none" tabindex="-1"
-     style="position:fixed; top:0; left:0; width:100%; height:100%;
-            background-color: #000; z-index:2000;
-            display:flex; flex-direction:column; align-items:center; justify-content:center; outline:none;">
-
+     style="position:fixed; top:0; left:0; width:100%; height:100%; background-color: #000; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; outline:none;">
     <div class="modal-top-bar">
         <button id="closeModal" class="btn btn-link text-white fs-4" style="transform: translateZ(0);">
             <i class="fas fa-arrow-left"></i>
         </button>
-
         <div class="d-flex gap-3 align-items-center position-relative" style="transform: translateZ(0);">
             <button id="btnDelete" class="btn btn-link text-white fs-5" title="Eliminar">
                 <i class="fas fa-trash-alt"></i>
             </button>
-
             <button id="btnMoreOptions" class="btn btn-link text-white fs-5" title="Más opciones">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
-
             <div id="modalDropdown" class="gp-dropdown-menu d-none">
                 <button class="gp-dropdown-item" id="btnAddToAlbum">
                     <i class="far fa-folder-open"></i>
@@ -207,17 +156,12 @@
         </div>
     </div>
 
-    <button id="prevBtn" class="nav-arrow left"
-            style="position:absolute; left:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❮</button>
-    <button id="nextBtn" class="nav-arrow right"
-            style="position:absolute; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❯</button>
+    <button id="prevBtn" class="nav-arrow left" style="position:absolute; left:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❮</button>
+    <button id="nextBtn" class="nav-arrow right" style="position:absolute; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer; z-index:2002;">❯</button>
 
-    <div id="modalContent"
-         style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-        <img id="modalImg" class="d-none"
-             style="max-width:100%; max-height:90vh; object-fit:contain; transform:translateZ(0); will-change:transform,opacity;">
-        <video id="modalVideo" class="d-none" controls autoplay
-               style="max-width:100%; max-height:90vh; transform:translateZ(0);"></video>
+    <div id="modalContent" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+        <img id="modalImg" class="d-none" style="max-width:100%; max-height:90vh; object-fit:contain; transform:translateZ(0); will-change:transform,opacity;">
+        <video id="modalVideo" class="d-none" controls autoplay style="max-width:100%; max-height:90vh; transform:translateZ(0);"></video>
     </div>
 
     <div id="modalLoader" class="modal-loader-container d-none">
@@ -229,23 +173,19 @@
 </div>
 
 {# ═══════════════════════════════════════════════════════════ #}
-{# MODAL CONFIRMACIÓN DE BORRADO                              #}
+{# MODAL CONFIRMACIÓN DE BORRADO                               #}
 {# ═══════════════════════════════════════════════════════════ #}
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 2100;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content"
-             style="background-color: #202124; border: 1px solid #5f6368; color: #e8eaed; border-radius: 12px;">
+        <div class="modal-content" style="background-color: #202124; border: 1px solid #5f6368; color: #e8eaed; border-radius: 12px;">
             <div class="modal-body text-center p-4">
                 <div class="mb-3">
                     <i class="fas fa-trash-alt fa-3x text-danger"></i>
                 </div>
                 <h5 class="mb-2 fw-bold">¿Eliminar archivo?</h5>
                 <p class="small text-secondary mb-4">Esta acción no se puede deshacer. El archivo se borrará de la nube y de tu galería.</p>
-
                 <div class="d-flex gap-2 justify-content-center">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                            data-bs-dismiss="modal"
-                            style="border-color: #5f6368; color: #e8eaed;">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal" style="border-color: #5f6368; color: #e8eaed;">
                         Cancelar
                     </button>
                     <button type="button" id="btnConfirmDeleteAction" class="btn btn-danger rounded-pill px-4">
@@ -256,16 +196,15 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
     const URLS = {
         eliminar: "{% url 'eliminar_archivo' %}"
     };
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/lazyload.js' %}"></script>
 <script src="{% static 'js/index.js' %}"></script>
-<script src="{% static 'js/topbar.js' %}"></script>
-</body>
-</html>
+{% endblock %}
