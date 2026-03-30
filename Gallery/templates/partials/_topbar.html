@@ -1,0 +1,42 @@
+<header class="app-topbar" id="appTopbar">
+
+    {# ── Botón hamburguesa (siempre visible) ────────────────────── #}
+    <button class="topbar__menu-btn" id="sidebarToggleBtn"
+            aria-label="Alternar menú lateral"
+            aria-expanded="false"
+            aria-controls="appSidebar">
+        <i class="fas fa-bars" id="sidebarToggleIcon"></i>
+    </button>
+
+    {# ── Centro: buscador (index) ó título (resto de páginas) ───── #}
+    {% if request.resolver_match.url_name == 'index' %}
+        <form action="{% url 'index' %}" method="GET"
+              class="topbar__search" role="search" id="topbarSearchForm">
+            <i class="fas fa-search topbar__search-icon" aria-hidden="true"></i>
+            <input type="text"
+                   name="q"
+                   value="{{ request.GET.q|default:'' }}"
+                   placeholder="Buscar en MyMediaHub"
+                   class="topbar__search-input"
+                   autocomplete="off"
+                   aria-label="Buscar archivos">
+            {% if request.GET.q %}
+                <a href="{% url 'index' %}" class="topbar__search-clear"
+                   aria-label="Limpiar búsqueda" title="Limpiar">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% endif %}
+        </form>
+    {% else %}
+        <span class="topbar__page-title">{{ page_title|default:'' }}</span>
+    {% endif %}
+
+    {# ── Acciones derecha ───────────────────────────────────────── #}
+    <div class="topbar__actions">
+        <a href="{% url 'ver_perfil' %}" class="topbar__avatar-btn"
+           title="Mi Perfil ({{ request.user.username }})">
+            <span class="topbar__avatar">{{ request.user.username|first|upper }}</span>
+        </a>
+    </div>
+
+</header>

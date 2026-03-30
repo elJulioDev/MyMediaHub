@@ -34,23 +34,8 @@ body {
 
 /* --- LAYOUT GENERAL --- */
 .app-container {
-    display: flex;
     min-height: 100vh;
-}
-
-/* --- SIDEBAR IZQUIERDO (MEJORADO) --- */
-.sidebar {
-    width: var(--gp-sidebar-width);
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    padding: 12px 0; /* Padding ajustado */
-    background: var(--gp-sidebar-bg); /* Color distintivo */
-    border-right: 1px solid var(--gp-border); /* Borde sutil */
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
+    display: block;
 }
 
 .brand-area {
@@ -103,58 +88,10 @@ body {
 
 /* --- CONTENIDO PRINCIPAL --- */
 .main-content {
-    flex: 1;
     margin-left: var(--gp-sidebar-width);
     padding: 0 24px 24px 24px;
-}
-
-/* --- TOP BAR (BUSCADOR OSCURO) --- */
-.top-bar {
-    position: sticky;
-    top: 0;
-    background: #131314;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
-    z-index: 900;
-    padding: 12px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.search-box {
-    background: var(--gp-search-bg);
-    border-radius: 8px;
-    padding: 12px 20px;
-    width: 100%;
-    max-width: 700px;
-    display: flex;
-    align-items: center;
-    color: var(--gp-text-secondary);
-    transition: background 0.2s;
-    border: 1px solid transparent;
-}
-
-.search-box:focus-within {
-    background: var(--gp-search-bg); /* Se mantiene oscuro */
-    border-color: rgba(255,255,255,0.1);
-    color: var(--gp-text-main);
-}
-
-.search-box input {
-    border: none;
-    background: transparent;
-    flex: 1;
-    margin-left: 15px;
-    font-size: 16px;
-    color: var(--gp-text-main); /* Texto blanco al escribir */
-    outline: none;
-}
-
-.search-box input::placeholder {
-    color: var(--gp-text-secondary);
+    padding-top: calc(var(--topbar-height) + 24px);
+    box-sizing: border-box;
 }
 
 /* --- TIMELINE DE FOTOS --- */
@@ -180,6 +117,7 @@ body {
 }
 
 .photo-item {
+    overflow: hidden; 
     position: relative;
     aspect-ratio: 1 / 1; 
     background-color: #303134; /* Placeholder gris oscuro mientras carga */
@@ -224,8 +162,11 @@ body {
 
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .main-content { margin-left: 0; padding: 0 10px; }
+    .main-content {
+        margin-left: 0;
+        padding: 0 10px 10px;
+        padding-top: calc(var(--topbar-height) + 15px);
+    }
     .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 2px; }
 }
 
@@ -393,8 +334,54 @@ body {
     transform: scale(1);
 }
 
-/* IMPORTANTE: Asegúrate de que .photo-item tenga overflow hidden para cortar los bordes borrosos */
-.photo-item {
-    overflow: hidden; 
-    /* ... resto de tus estilos ... */
+/* ── Tarjetas de álbum (lista_albumes) ────────────────────────── */
+.gp-album-card {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #28292c;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color 180ms, transform 180ms;
+    cursor: pointer;
+}
+
+.gp-album-card:hover {
+    border-color: rgba(105, 157, 244, 0.3);
+    transform: translateY(-2px);
+}
+
+.gp-album-card__img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+}
+
+.gp-album-card__placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #303134;
+    color: #5f6368;
+}
+
+.gp-album-card__info {
+    padding: 10px 12px;
+}
+
+.gp-album-card__name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e8eaed;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gp-album-card__meta {
+    font-size: 11px;
+    color: #9ba1ab;
+    margin: 0;
 }

@@ -1,0 +1,196 @@
+/* ══════════════════════════════════════════════════════════════════
+   TOPBAR — MyMediaHub
+   Barra superior fija. En desktop arranca a la derecha del sidebar.
+   En mobile ocupa el ancho completo.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ────────────────────────────────────────────────────── */
+:root {
+    --topbar-height:  60px;
+    --topbar-bg:      #17181a;
+    --topbar-border:  rgba(255, 255, 255, 0.06);
+    --topbar-z:       950;       /* Debajo del sidebar drawer (1200) pero encima del contenido */
+}
+
+/* ── Contenedor ────────────────────────────────────────────────── */
+.app-topbar {
+    position: fixed;
+    top:    0;
+    left:   var(--sb-width);    /* Desktop: respeta el sidebar */
+    right:  0;
+    height: var(--topbar-height);
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--topbar-border);
+    z-index: var(--topbar-z);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    box-sizing: border-box;
+
+    /* Transición suave cuando el sidebar se colapsa */
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cuando el sidebar está colapsado, la topbar se expande */
+body.sidebar-is-collapsed .app-topbar {
+    left: 0;
+}
+
+/* ── Botón hamburguesa ─────────────────────────────────────────── */
+.topbar__menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #9ba1ab;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 180ms ease, color 180ms ease;
+}
+
+.topbar__menu-btn:hover,
+.topbar__menu-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    outline: none;
+}
+
+/* ── Barra de búsqueda ─────────────────────────────────────────── */
+.topbar__search {
+    flex: 1;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    background: #28292c;
+    border-radius: 24px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    transition: border-color 200ms, background 200ms, box-shadow 200ms;
+}
+
+.topbar__search:focus-within {
+    background:   #303134;
+    border-color: rgba(105, 157, 244, 0.4);
+    box-shadow:   0 0 0 3px rgba(105, 157, 244, 0.08);
+}
+
+.topbar__search-icon {
+    color: #9ba1ab;
+    font-size: 14px;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.topbar__search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #e8eaed;
+    font-size: 15px;
+    outline: none;
+    margin: 0 10px;
+    min-width: 0;       /* Evita overflow en flex */
+}
+
+.topbar__search-input::placeholder {
+    color: #7b7e85;
+}
+
+.topbar__search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    color: #9ba1ab;
+    font-size: 13px;
+    text-decoration: none;
+    border-radius: 50%;
+    transition: color 150ms, background 150ms;
+}
+
+.topbar__search-clear:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Título de página (páginas sin buscador) ───────────────────── */
+.topbar__page-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #e8eaed;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Acciones derechas ─────────────────────────────────────────── */
+.topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.topbar__avatar-btn {
+    display: flex;
+    text-decoration: none;
+    border-radius: 50%;
+    transition: box-shadow 200ms;
+}
+
+.topbar__avatar-btn:hover .topbar__avatar {
+    box-shadow: 0 0 0 3px rgba(105, 157, 244, 0.35);
+}
+
+.topbar__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3c6fe0, #699df4);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: box-shadow 200ms;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .sidebar {
+        width: var(--sb-width);
+        max-width: 80vw;
+        position: fixed !important; /* Garantiza que flote fuera del contenido */
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 9999 !important; /* Súper alto para tapar el Topbar (que es 950) */
+        overflow-y: auto; 
+        overflow-x: hidden;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Aseguramos que el fondo oscuro también tape el Topbar */
+    .sidebar-backdrop {
+        /* ... el resto de tus propiedades ... */
+        z-index: 9998 !important; 
+    }
+}

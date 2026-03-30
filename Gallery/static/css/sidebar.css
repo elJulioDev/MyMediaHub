@@ -486,3 +486,28 @@
     background: rgba(255, 255, 255, 0.07);
     color: #fff;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   COLAPSO DESKTOP — sidebar deslizable en todos los tamaños
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Transición suave en desktop */
+.sidebar {
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estado colapsado (desktop) */
+body.sidebar-is-collapsed .sidebar {
+    transform: translateX(-100%);
+}
+
+/* El main-content se expande al colapsar */
+body.sidebar-is-collapsed .main-content {
+    margin-left: 0;
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Asegura transición también en estado normal */
+.main-content {
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}

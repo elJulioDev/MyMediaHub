@@ -13,25 +13,16 @@
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
     <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/topbar.css' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'img/icon.svg' %}">
 </head>
 <body>
 
 <div class="app-container">
-
     {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_topbar.html' with page_title="Mi Cuenta" %}
 
     <main class="main-content">
-
-        {# ── Hamburguesa móvil ──────────────────────────────────── #}
-        <div class="d-flex align-items-center pt-3 pb-1 d-md-none px-2">
-            <button class="sidebar-toggle-btn" id="sidebarToggleBtn"
-                    aria-label="Abrir menú" aria-expanded="false"
-                    aria-controls="appSidebar">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-
         <div class="profile-wrapper">
 
             {# ═══════ ENCABEZADO ═══════ #}
@@ -310,5 +301,6 @@
         });
     });
 </script>
+<script src="{% static 'js/topbar.js' %}"></script>
 </body>
 </html>
