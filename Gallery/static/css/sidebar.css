@@ -40,7 +40,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     background: var(--sb-bg);
@@ -398,10 +399,86 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RESPONSIVE — móvil
+   RESPONSIVE — móvil  (reemplaza el bloque anterior @media)
    ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+
+    /* El sidebar pasa a ser un drawer fuera del viewport */
     .sidebar {
-        display: none;
+        width: var(--sb-width);
+        max-width: 80vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        background: var(--sb-bg);
+        border-right: 1px solid var(--sb-border);
+        
+        /* CORRECCIONES AQUÍ: */
+        z-index: 1200; /* Debe ser mayor al 1100 del backdrop */
+        overflow-y: auto; 
+        overflow-x: hidden;
+        transform: translateX(-100%); /* Lo esconde fuera de la pantalla */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave al abrir */
     }
+
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+
+    /* Estado abierto — añadido via JS al <nav> */
+    .sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Telón de fondo semitransparente */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 1100;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        animation: fadeInBackdrop 220ms ease forwards;
+    }
+
+    .sidebar-backdrop.is-visible {
+        display: block;
+    }
+
+    @keyframes fadeInBackdrop {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* Botón hamburguesa visible solo en móvil */
+    .sidebar-toggle-btn {
+        display: flex !important;
+    }
+}
+
+/* Ocultar el botón en desktop */
+.sidebar-toggle-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--gp-text-secondary, #babdbf);
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 180ms ease, color 180ms ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
 }

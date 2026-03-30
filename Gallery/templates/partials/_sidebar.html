@@ -162,3 +162,45 @@
     {% endif %}
 
 </nav>
+<!-- Backdrop para cerrar el drawer en móvil -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<script>
+    /* ── Sidebar drawer (solo móvil) ───────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar   = document.getElementById('appSidebar');
+        const backdrop  = document.getElementById('sidebarBackdrop');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+
+        // Si falta algún elemento, cancelamos para no tirar error
+        if (!sidebar || !backdrop || !toggleBtn) return;
+
+        function openSidebar() {
+            sidebar.classList.add('is-open');
+            backdrop.classList.add('is-visible');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden'; // evita scroll del fondo
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('is-open');
+            backdrop.classList.remove('is-visible');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        toggleBtn.addEventListener('click', function () {
+            sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
+        });
+
+        // Cerrar al tocar el backdrop (el fondo oscuro)
+        backdrop.addEventListener('click', closeSidebar);
+
+        // Cerrar con tecla Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                closeSidebar();
+            }
+        });
+    });
+</script>

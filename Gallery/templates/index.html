@@ -100,15 +100,23 @@
         {% endif %}
 
         <header class="top-bar">
+        
+            <!-- Botón hamburguesa: solo visible en móvil (sidebar.css lo controla) -->
+            <button class="sidebar-toggle-btn me-2" id="sidebarToggleBtn"
+                    aria-label="Abrir menú" aria-expanded="false"
+                    aria-controls="appSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        
             <form action="{% url 'index' %}" method="GET" class="search-box w-100" style="max-width: 600px;">
                 <i class="fas fa-search"></i>
-
+        
                 <input type="text"
                        name="q"
                        placeholder="Buscar en tu galería..."
                        value="{{ query|default:'' }}"
                        autocomplete="off">
-
+        
                 {% if query %}
                     <a href="{% url 'index' %}" class="text-decoration-none text-secondary me-2">
                         <i class="fas fa-times"></i>
@@ -287,6 +295,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/lazyload.js' %}"></script>
 <script src="{% static 'js/index.js' %}"></script>
-
 </body>
 </html>
